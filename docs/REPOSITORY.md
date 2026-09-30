@@ -104,3 +104,9 @@ Stage 7 uses a real local MCP subprocess fixture rather than a mocked component 
 - preservation of the existing skill and Generative UI surfaces.
 
 The default seed catalog has no executable MCP proxy binding. The descriptive `resource.github` `mcp://github` interface remains inert because its adapter is `github`, not `fastmcp-proxy`.
+
+### Stage 7 verified baseline
+
+GitHub Actions run `36657579515` verified the live federation path with 30 passing tests plus browser/API/workspace checks. The CI catalog uses a temporary copy of the durable registry and injects a test-only `file://` MCP binding, so verification is realistic without adding fixture inventory to the seed catalog.
+
+The browser verified discovery metadata and runtime availability; `/api/catalog` verified one configured and one available MCP backend plus upstream `echo` tool evidence; the workspace verified `MCP: 1/1 available` while retaining the Generative UI Apps switcher.

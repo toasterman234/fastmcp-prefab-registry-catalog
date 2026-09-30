@@ -107,3 +107,16 @@
 - Integration tests mount the fixture through FastMCP, verify namespaced components, execute the proxied tool, discover original upstream component names, project them onto the catalog object, and search by discovered component metadata.
 - Functional branch run `36657399476` on commit `09ee164fd156a958227175a12cd2c5484d0b52b6` passed 30 pytest tests, Python compilation, the existing browser path, and the Next.js production build.
 - Added a stronger browser/API fixture on `47f4615c6a5c8fe94fa8391374fceb35cc048eb4`: CI copies the real catalog to a temporary root, adds one live `file://` MCP binding, and verifies the runtime projection end to end without polluting durable seed data.
+
+- End-to-end live federation run `36657579515` on commit `47f4615c6a5c8fe94fa8391374fceb35cc048eb4` passed:
+  - 30 pytest tests
+  - Python compilation
+  - Next.js production build
+  - temporary-registry FastMCP startup with one live `file://` proxy binding
+  - Prefab search by discovered MCP component metadata
+  - actual skill resource enumeration
+  - `/api/catalog` skill + MCP federation projection verification
+  - workspace `MCP: 1/1 available` plus Catalog/Generative UI verification
+- Browser receipt: `BROWSER_VERIFY succeeded: skill discovery, live MCP federation metadata, stable IDs, and available interfaces rendered`.
+- Catalog receipt: `CATALOG_HTTP_VERIFY succeeded: skill and MCP federation projections are present`.
+- Workspace receipt: `WORKSPACE_VERIFY succeeded: live MCP federation status plus Catalog/Generative UI Apps rendered`.

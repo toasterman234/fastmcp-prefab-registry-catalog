@@ -101,7 +101,7 @@ Build a minimal portable YAML-backed registry/catalog in Python with a domain re
 - [x] Mark runtime interfaces `available` or `unavailable` without mutating YAML
 - [x] Verify a real proxied MCP tool call
 - [x] Verify live federation in Prefab, `/api/catalog`, and workspace shell
-- **Status:** implemented on `feat/stage7-mcp-federation`; verification in progress
+- **Status:** implemented and verified on `feat/stage7-mcp-federation`; pending PR merge
 
 Next is files/docs/policies discovery. Controlled CRUD, broader live adapters, and JEv/scale features remain tracked in issue #1 and are intentionally not started.
 
