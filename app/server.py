@@ -17,80 +17,124 @@ from prefab_ui.app import PrefabApp
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from app.catalog import CatalogView
 from app.registry import registry
+from app.skill_discovery import (
+    build_skills_provider,
+    discovery_status,
+    project_discovered_skills,
+    resolve_skill_roots,
+)
 from app.ui import build_catalog_app
 
 mcp = FastMCP(
     "Environment Catalog",
     instructions=(
-        "A minimal YAML-backed catalog of agents, skills, policies, resources, machines, "
-        "databases, projects, and playbooks. Use the deterministic catalog app for known "
-        "registry browsing and Generative UI for open-ended visualizations."
+        "A portable catalog of agents, skills, policies, resources, machines, databases, "
+        "projects, and playbooks. Use the deterministic catalog app for known registry "
+        "browsing, discovered skill resources for runtime instructions, and Generative UI "
+        "for open-ended visualizations."
     ),
 )
 mcp.add_provider(GenerativeUI())
+
+_SKILL_ROOTS = resolve_skill_roots()
+_SKILLS_PROVIDER = build_skills_provider(_SKILL_ROOTS, reload=True)
+if _SKILLS_PROVIDER is not None:
+    # A configured root becomes runtime evidence only after FastMCP discovers
+    # an actual SKILL.md. The provider remains read-only in this stage.
+    mcp.add_provider(_SKILLS_PROVIDER)
 
 
 def _objects_payload(objects: list[Any]) -> list[dict[str, Any]]:
     return [obj.to_dict() for obj in objects]
 
 
-def _catalog_snapshot() -> dict[str, Any]:
-    return {
-        "objects": _objects_payload(registry.list_objects()),
-        "status_summary": _status_summary(),
-        "connected": True,
-    }
+def _catalog_view() -> tuple[CatalogView, dict[str, Any]]:
+    base_objects = registry.list_objects()
+    projected_skills = project_discovered_skills(_SKILL_ROOTS, base_objects)
+    return (
+        CatalogView(base_objects, projected_skills),
+        discovery_status(_SKILL_ROOTS, projected_skills),
+    )
 
 
-def _status_summary() -> str:
+def _status_summary(objects: list[Any]) -> str:
     counts: dict[str, int] = {}
-    for obj in registry.list_objects():
+    for obj in objects:
         counts[obj.status] = counts.get(obj.status, 0) + 1
     return ", ".join(f"{status}: {count}" for status, count in sorted(counts.items())) or "no statuses"
 
 
+def _catalog_snapshot() -> dict[str, Any]:
+    catalog_view, skills = _catalog_view()
+    objects = catalog_view.list_objects()
+    return {
+        "objects": _objects_payload(objects),
+        "status_summary": _status_summary(objects),
+        "connected": True,
+        "discovery": {"skills": skills},
+    }
+
+
 @mcp.tool()
 def registry_search(query: str) -> list[dict[str, Any]]:
-    """Search registry objects across IDs, names, descriptions, capabilities, and relationships."""
-    return _objects_payload(registry.search_objects(query))
+    """Search the merged catalog, including runtime-discovered skills."""
+    catalog_view, _ = _catalog_view()
+    return _objects_payload(catalog_view.search_objects(query))
 
 
 @mcp.tool()
 def registry_get(object_id: str) -> dict[str, Any] | None:
-    """Get one registry object by its stable ID."""
-    obj = registry.get_object(object_id)
+    """Get one merged catalog object by its stable ID."""
+    catalog_view, _ = _catalog_view()
+    obj = catalog_view.get_object(object_id)
     return obj.to_dict() if obj else None
 
 
 @mcp.tool()
 def registry_list(kind: str | None = None, status: str | None = None) -> list[dict[str, Any]]:
-    """List registry objects, optionally filtered by kind and/or status."""
-    return _objects_payload(registry.filter_objects(kind=kind, status=status))
+    """List merged catalog objects, optionally filtered by kind and/or status."""
+    catalog_view, _ = _catalog_view()
+    return _objects_payload(catalog_view.filter_objects(kind=kind, status=status))
 
 
 @mcp.tool()
 def registry_related(object_id: str) -> dict[str, list[dict[str, Any]]]:
-    """Resolve outgoing relationships declared by one registry object."""
+    """Resolve outgoing relationships declared by one merged catalog object."""
+    catalog_view, _ = _catalog_view()
     return {
         relation: _objects_payload(objects)
-        for relation, objects in registry.related_objects(object_id).items()
+        for relation, objects in catalog_view.related_objects(object_id).items()
     }
 
 
 @mcp.tool()
 def registry_incoming(object_id: str) -> dict[str, list[dict[str, Any]]]:
-    """Resolve registry objects that point to the selected object."""
+    """Resolve merged catalog objects that point to the selected object."""
+    catalog_view, _ = _catalog_view()
     return {
         relation: _objects_payload(objects)
-        for relation, objects in registry.incoming_objects(object_id).items()
+        for relation, objects in catalog_view.incoming_objects(object_id).items()
     }
 
 
 @mcp.tool()
 def registry_validate() -> dict[str, Any]:
-    """Validate YAML records, duplicate IDs, and relationship references."""
-    return registry.validate_registry().to_dict()
+    """Validate durable YAML records and report runtime skill discovery separately."""
+    catalog_view, skills = _catalog_view()
+    report = registry.validate_registry().to_dict()
+    report["object_count"] = len(catalog_view.list_objects())
+    report["base_object_count"] = len(registry.list_objects())
+    report["discovery"] = {"skills": skills}
+    return report
+
+
+@mcp.tool()
+def skill_discovery_status() -> dict[str, Any]:
+    """Report configured skill roots and currently discovered skill IDs."""
+    _, skills = _catalog_view()
+    return skills
 
 
 @mcp.custom_route("/api/catalog", methods=["GET"])
@@ -101,8 +145,9 @@ async def catalog_http_projection(request: Request) -> JSONResponse:
 
 @mcp.resource("registry://objects/{object_id}", mime_type="application/json")
 def registry_object_resource(object_id: str) -> str:
-    """Read an individual registry object as JSON."""
-    obj = registry.get_object(object_id)
+    """Read an individual merged catalog object as JSON."""
+    catalog_view, _ = _catalog_view()
+    obj = catalog_view.get_object(object_id)
     if obj is None:
         return json.dumps({"error": "not_found", "id": object_id})
     return json.dumps(obj.to_dict(), indent=2)
@@ -110,16 +155,18 @@ def registry_object_resource(object_id: str) -> str:
 
 @mcp.resource("registry://objects", mime_type="application/json")
 def registry_objects_resource() -> str:
-    """Read the complete registry snapshot as JSON."""
-    return json.dumps(_objects_payload(registry.list_objects()), indent=2)
+    """Read the complete merged catalog snapshot as JSON."""
+    catalog_view, _ = _catalog_view()
+    return json.dumps(_objects_payload(catalog_view.list_objects()), indent=2)
 
 
 @mcp.tool(app=True)
 def catalog() -> PrefabApp:
-    """Browse the Environment Catalog in a compact Prefab UI."""
-    objects = registry.list_objects()
-    incoming = {obj.id: registry.incoming_objects(obj.id) for obj in objects}
-    return build_catalog_app(objects, _status_summary(), incoming)
+    """Browse the merged Environment Catalog in a compact Prefab UI."""
+    catalog_view, _ = _catalog_view()
+    objects = catalog_view.list_objects()
+    incoming = {obj.id: catalog_view.incoming_objects(obj.id) for obj in objects}
+    return build_catalog_app(objects, _status_summary(objects), incoming)
 
 
 if __name__ == "__main__":

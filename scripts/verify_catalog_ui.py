@@ -10,7 +10,7 @@ from playwright.sync_api import Frame, Page, sync_playwright
 
 DEV_PORT = int(os.environ.get("CATALOG_DEV_PORT", "9090"))
 BASE_URL = f"http://127.0.0.1:{DEV_PORT}"
-SCREENSHOT = Path(os.environ.get("CATALOG_SCREENSHOT", "/tmp/catalog-stage3.png"))
+SCREENSHOT = Path(os.environ.get("CATALOG_SCREENSHOT", "/tmp/catalog-stage5.png"))
 
 
 def find_app_frame(page: Page, timeout_seconds: float = 30.0) -> Frame:
@@ -48,45 +48,31 @@ def main() -> int:
 
         app = find_app_frame(page)
         assert_visible(app, "Environment Catalog")
-        assert_visible(app, "Everything (16)")
+        assert_visible(app, "Everything (17)")
 
-        agents_tab = app.get_by_role("tab", name="Agents (2)")
-        agents_tab.click()
-        assert_visible(app, "Pi")
-        assert_visible(app, "Codex")
-
-        active_tab = app.locator('[role="tab"]:visible', has_text="Active (2)").first
-        if active_tab.count() == 0:
-            raise AssertionError("Expected visible Active (2) status filter")
-        active_tab.click()
+        skills_tab = app.get_by_role("tab", name="Skills (3)")
+        skills_tab.click()
+        assert_visible(app, "Browser Verification")
+        assert_visible(app, "Root Cause Analysis")
+        assert_visible(app, "Discovered Test")
 
         search = app.locator("input:visible").first
         if search.count() == 0:
             raise AssertionError("Expected a visible DataTable search input")
 
-        search.fill("agent.pi.mac")
-        assert_visible(app, "Pi")
-        assert_not_visible(app, "Codex")
+        search.fill("skill://discovered-test/SKILL.md")
+        assert_visible(app, "Discovered Test")
+        assert_not_visible(app, "Root Cause Analysis")
 
-        search.fill("cli://pi")
-        assert_visible(app, "Pi")
-        assert_not_visible(app, "Codex")
-
-        search.fill("registry://agents/pi.yaml")
-        assert_visible(app, "Pi")
-        assert_not_visible(app, "Codex")
-
-        search.fill("")
-        policies_tab = app.get_by_role("tab", name="Policies (2)")
-        policies_tab.click()
-        assert_visible(app, "Browser Verification Required")
-        assert_visible(app, "Evidence Before Completion")
+        search.fill("fastmcp-skills")
+        assert_visible(app, "Discovered Test")
+        assert_visible(app, "Browser Verification")
 
         SCREENSHOT.parent.mkdir(parents=True, exist_ok=True)
         page.screenshot(path=str(SCREENSHOT), full_page=True)
         print(
-            "BROWSER_VERIFY succeeded: kind/status filters, ID search, source search, "
-            f"declared-interface search, and policy view rendered; screenshot={SCREENSHOT}"
+            "BROWSER_VERIFY succeeded: real SKILL.md discovery, stable skill IDs, "
+            f"available MCP resource interfaces, and catalog projection rendered; screenshot={SCREENSHOT}"
         )
         browser.close()
     return 0

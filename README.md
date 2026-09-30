@@ -2,7 +2,7 @@
 
 A deliberately small, portable catalog for describing an agent environment.
 
-The v0 source of truth is a set of YAML files. Pydantic validates records, the ordinary Python registry library provides domain operations, FastMCP exposes tools and resources, and Prefab renders the catalog UI.
+The durable catalog starts with YAML. Pydantic validates records, the Python registry library provides domain operations, FastMCP exposes tools/resources/providers, runtime providers can project live objects into the catalog, and Prefab renders deterministic app surfaces.
 
 ## Repository handoff
 
@@ -199,3 +199,17 @@ The FastMCP server mounts the native `GenerativeUI()` provider. This adds:
 - the streaming Prefab renderer
 
 The workspace keeps this under **Apps → Generative UI**. Generated UI is an app surface, not the global workspace shell. Generated code runs in FastMCP's sandbox and is limited to standard Python plus Prefab; generated UIs are not persisted as artifacts in this stage.
+
+## Real skill discovery
+
+Set `SKILLS_ROOTS` to one or more directories separated by the platform path separator:
+
+```bash
+export SKILLS_ROOTS="/path/to/skills:/another/path/to/skills"
+```
+
+FastMCP `SkillsDirectoryProvider` scans each root for immediate child directories containing `SKILL.md`. Discovered skills are exposed as `skill://<name>/SKILL.md` and `skill://<name>/_manifest` resources and projected into the same catalog/API/Prefab/workspace object set.
+
+Runtime skill IDs are stable as `skill.<directory-name>`. A successfully discovered skill uses `authority: external`, `refresh: on-read`, `writeback: none`, and an `mcp-resource` interface with `status: available`. Matching YAML skill records retain catalog capabilities and relationships as annotations.
+
+Stage 6 is read-only: it never silently creates, edits, deletes, copies, or synchronizes skill files. See `docs/SKILL_DISCOVERY.md`.

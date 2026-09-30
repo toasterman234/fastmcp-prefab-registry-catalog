@@ -31,7 +31,9 @@ jobs:
         run: python -m pip install -e '.[test,ui-test]'
       - name: Install Chromium
         run: python -m playwright install --with-deps chromium
-      - name: Start FastMCP Apps preview
+      - name: Start FastMCP Apps preview with real skill discovery
+        env:
+          SKILLS_ROOTS: ${{ github.workspace }}/tests/fixtures/skills
         run: |
           fastmcp dev apps app/server.py --mcp-port 9000 --dev-port 9090 --no-reload > /tmp/fastmcp-apps.log 2>&1 &
           echo $! > /tmp/fastmcp-apps.pid
@@ -47,6 +49,44 @@ jobs:
         env:
           CATALOG_DEV_PORT: "9090"
         run: python scripts/verify_catalog_ui.py
+      - name: Verify skill resources through FastMCP HTTP
+        run: |
+          python - <<'PY'
+          import asyncio
+          from fastmcp import Client
+
+          async def main():
+              async with Client("http://127.0.0.1:9000/mcp") as client:
+                  resources = await client.list_resources()
+                  uris = {str(resource.uri) for resource in resources}
+                  expected = {
+                      "skill://browser-verification/SKILL.md",
+                      "skill://browser-verification/_manifest",
+                      "skill://discovered-test/SKILL.md",
+                      "skill://discovered-test/_manifest",
+                  }
+                  missing = expected - uris
+                  assert not missing, f"missing skill resources: {sorted(missing)}"
+                  print(f"SKILL_RESOURCE_VERIFY succeeded: {sorted(expected)}")
+
+          asyncio.run(main())
+          PY
+      - name: Verify HTTP catalog projection
+        run: |
+          python - <<'PY'
+          import json
+          from urllib.request import urlopen
+
+          with urlopen("http://127.0.0.1:9000/api/catalog") as response:
+              payload = json.load(response)
+
+          assert len(payload["objects"]) == 17
+          skills = payload["discovery"]["skills"]
+          assert skills["discovered_count"] == 2
+          ids = {obj["id"] for obj in payload["objects"]}
+          assert "skill.discovered-test" in ids
+          print("CATALOG_HTTP_VERIFY succeeded: runtime skill projection is present")
+          PY
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
@@ -85,7 +125,6 @@ jobs:
           if [ -f /tmp/fastmcp-apps.pid ]; then
             kill "$(cat /tmp/fastmcp-apps.pid)" || true
           fi
-
 
   web:
     runs-on: ubuntu-latest

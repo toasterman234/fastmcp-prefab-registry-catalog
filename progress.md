@@ -80,4 +80,16 @@
 - Added server discovery test for all existing registry tools plus both Generative UI tools.
 - Apps workspace now switches between Catalog app and Generative UI while preserving shell-owned navigation.
 - Added Chromium workspace verification that clicks Apps → Generative UI and asserts the iframe targets `tool=generate_prefab_ui` and exposes both provider tool names in the surface description.
-- CI result pending; stage remains unverified until read back green.
+- PR #10 merged to `master`; native Generative UI remains mounted beside the deterministic catalog app.
+
+### Stage 6: real skill discovery
+- Reconciled against current `master` after PR #10 merged so native Generative UI is preserved.
+- Added `SKILLS_ROOTS` configuration using the platform path separator.
+- Added FastMCP `SkillsDirectoryProvider(reload=True)` when roots are configured.
+- Added `CatalogView` so runtime projections overlay durable YAML records without moving provider logic into the registry domain layer.
+- Stable runtime skill IDs use `skill.<directory-name>`.
+- Matching YAML skills retain capabilities/relationships; runtime source/interface state is overlaid and the prior catalog source is retained in metadata.
+- New discovered skills exist only in the runtime projection; no YAML is silently written.
+- Added `skill_discovery_status` while keeping both Generative UI tools mounted.
+- CI fixtures include one overlay skill and one runtime-only skill.
+- Verification requires Python tests/compile, web build, Prefab browser discovery, actual FastMCP `skill://` resources, `/api/catalog` runtime projection, and the existing Generative UI workspace switcher.

@@ -17,6 +17,7 @@ function Catalog({ snapshot }: { snapshot: RegistrySnapshot }) {
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("all");
   const [selected, setSelected] = useState<RegistryObject | null>(null);
+  const skillDiscovery = snapshot.discovery?.skills;
 
   const kinds = useMemo(
     () => [...new Set(snapshot.objects.map((item) => item.kind))].sort(),
@@ -49,7 +50,10 @@ function Catalog({ snapshot }: { snapshot: RegistrySnapshot }) {
         <div className="surface-header">
           <div>
             <h1>Catalog</h1>
-            <p>{snapshot.objects.length} objects · {snapshot.status_summary}</p>
+            <p>
+              {snapshot.objects.length} objects · {snapshot.status_summary}
+              {skillDiscovery?.enabled ? ` · skills: ${skillDiscovery.discovered_count ?? 0} discovered` : ""}
+            </p>
           </div>
           <span className={snapshot.connected === false ? "status warning" : "status ok"}>
             {snapshot.connected === false ? "API offline" : "live projection"}
@@ -116,6 +120,12 @@ function Catalog({ snapshot }: { snapshot: RegistrySnapshot }) {
               <dt>Source</dt><dd>{selected.source?.uri || selected.source?.type || "None"}</dd>
               <dt>Authority</dt><dd>{selected.source?.authority || "None"}</dd>
               <dt>Writeback</dt><dd>{selected.source?.writeback || "None"}</dd>
+              <dt>Interfaces</dt>
+              <dd>
+                {selected.interfaces?.length
+                  ? selected.interfaces.map((item) => `${item.type ?? "interface"}:${item.status ?? "unknown"}`).join(", ")
+                  : "None"}
+              </dd>
             </dl>
           </>
         ) : (

@@ -5,7 +5,7 @@ import asyncio
 from app.server import mcp
 
 
-def test_server_exposes_registry_and_generative_ui_tools() -> None:
+def test_server_exposes_registry_skill_and_generative_ui_tools() -> None:
     tools = asyncio.run(mcp.list_tools())
     names = {tool.name for tool in tools}
 
@@ -16,6 +16,7 @@ def test_server_exposes_registry_and_generative_ui_tools() -> None:
         "registry_related",
         "registry_incoming",
         "registry_validate",
+        "skill_discovery_status",
         "catalog",
         "generate_prefab_ui",
         "search_prefab_components",
