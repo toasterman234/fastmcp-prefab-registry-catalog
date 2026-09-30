@@ -93,3 +93,17 @@
 - Added `skill_discovery_status` while keeping both Generative UI tools mounted.
 - CI fixtures include one overlay skill and one runtime-only skill.
 - Verification requires Python tests/compile, web build, Prefab browser discovery, actual FastMCP `skill://` resources, `/api/catalog` runtime projection, and the existing Generative UI workspace switcher.
+
+### Stage 7: MCP federation
+- Started from merged Stage 6 master `014df0c0e6ed05a7322ebf89f4d9b8edde17c90a`.
+- Verified FastMCP 4.0.10 composition/proxy behavior from authoritative source: `create_proxy()` can bridge HTTP or local-file servers, `mount(..., namespace=...)` exposes upstream tools/resources/prompts under collision-safe namespaces, and proxies are lazy until an upstream request is made.
+- Added `app/mcp_federation.py` for explicit catalog bindings, namespace validation, lazy proxy mounts, upstream discovery, 30-second cache, runtime status projection, and component metadata.
+- Federation opt-in requires `type: mcp` plus `adapter: fastmcp-proxy`; the existing descriptive GitHub `mcp://github` record is intentionally not auto-connected.
+- Supported target schemes are HTTP, HTTPS, and `file://` local Python MCP servers.
+- Added explicit `namespace` to `InterfaceSpec` and included interface namespace + runtime metadata in catalog search.
+- Added `mcp_federation_status(refresh=False)`; `refresh=true` forces a fresh upstream read-back.
+- `/api/catalog?refresh_mcp=true` can also force a fresh federation probe.
+- Added a real test MCP subprocess with one tool, resource, and prompt.
+- Integration tests mount the fixture through FastMCP, verify namespaced components, execute the proxied tool, discover original upstream component names, project them onto the catalog object, and search by discovered component metadata.
+- Functional branch run `36657399476` on commit `09ee164fd156a958227175a12cd2c5484d0b52b6` passed 30 pytest tests, Python compilation, the existing browser path, and the Next.js production build.
+- Added a stronger browser/API fixture on `47f4615c6a5c8fe94fa8391374fceb35cc048eb4`: CI copies the real catalog to a temporary root, adds one live `file://` MCP binding, and verifies the runtime projection end to end without polluting durable seed data.

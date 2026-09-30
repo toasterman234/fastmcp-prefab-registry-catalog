@@ -89,9 +89,21 @@ Build a minimal portable YAML-backed registry/catalog in Python with a domain re
 - [x] Distinguish declared from runtime-available interfaces
 - [x] Project discovered skills through tools/resources, `/api/catalog`, Prefab, and workspace shell
 - [x] Verify real skill resources over FastMCP HTTP
-- **Status:** implemented on `feat/stage5-real-skill-discovery`; PR #11
+- **Status:** merged in PR #11
 
-Next is MCP federation. Files/docs discovery, controlled CRUD, live adapters, and JEv/scale features remain tracked in issue #1 and are intentionally not started.
+### Stage 7: MCP federation
+- [x] Opt in catalog objects with `adapter: fastmcp-proxy`
+- [x] Support HTTP(S) and local-file MCP targets
+- [x] Mount upstream servers with unique namespaces
+- [x] Discover upstream tools/resources/resource templates/prompts
+- [x] Cache discovery and provide explicit refresh/read-back
+- [x] Project connectivity and component evidence onto the same catalog object
+- [x] Mark runtime interfaces `available` or `unavailable` without mutating YAML
+- [x] Verify a real proxied MCP tool call
+- [x] Verify live federation in Prefab, `/api/catalog`, and workspace shell
+- **Status:** implemented on `feat/stage7-mcp-federation`; verification in progress
+
+Next is files/docs/policies discovery. Controlled CRUD, broader live adapters, and JEv/scale features remain tracked in issue #1 and are intentionally not started.
 
 ## Decisions Made
 | # | Decision | Rationale |
@@ -113,3 +125,7 @@ Additional decisions:
 - Runtime skill identity is `skill.<directory-name>`.
 - A skill's `mcp-resource` interface becomes `available` only after provider discovery.
 - Real skill discovery is read-only; it does not install/edit/delete/sync skills.
+- MCP federation uses existing catalog interface records, not a second registry.
+- Only `adapter: fastmcp-proxy` is executable; descriptive `mcp://` records remain inert.
+- Namespace collisions are treated as configuration errors rather than silently shadowing components.
+- Runtime federation discovery is cached and read-only; no credentials, mutation, or automatic network scanning are added.
