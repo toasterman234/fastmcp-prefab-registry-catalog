@@ -146,6 +146,7 @@ function Apps({ appsUrl }: { appsUrl: string }) {
 
       <div className="app-tabs" role="tablist" aria-label="App surfaces">
         <button
+          data-testid="app-surface-catalog"
           className={appSurface === "catalog" ? "app-tab active" : "app-tab"}
           onClick={() => setAppSurface("catalog")}
           role="tab"
@@ -154,6 +155,7 @@ function Apps({ appsUrl }: { appsUrl: string }) {
           Catalog app
         </button>
         <button
+          data-testid="app-surface-generative"
           className={appSurface === "generative" ? "app-tab active" : "app-tab"}
           onClick={() => setAppSurface("generative")}
           role="tab"
@@ -202,7 +204,12 @@ export function WorkspaceShell({ snapshot, appsUrl }: { snapshot: RegistrySnapsh
         <div className="brand"><span className="brand-mark">F</span><div><strong>FastMCP</strong><small>workspace</small></div></div>
         <nav>
           {nav.map((item) => (
-            <button key={item.id} onClick={() => setSurface(item.id)} className={surface === item.id ? "active" : ""}>
+            <button
+              key={item.id}
+              data-testid={`nav-${item.id}`}
+              onClick={() => setSurface(item.id)}
+              className={surface === item.id ? "active" : ""}
+            >
               <span>{item.label}</span><small>{item.hint}</small>
             </button>
           ))}
