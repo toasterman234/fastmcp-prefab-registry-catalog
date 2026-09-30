@@ -189,3 +189,13 @@ npm run dev
 ```
 
 See [web/README.md](web/README.md) for the current development-host bridge and responsibility boundaries.
+
+
+## Generative UI
+
+The FastMCP server mounts the native `GenerativeUI()` provider. This adds:
+- `generate_prefab_ui`
+- `search_prefab_components`
+- the streaming Prefab renderer
+
+The workspace keeps this under **Apps → Generative UI**. Generated UI is an app surface, not the global workspace shell. Generated code runs in FastMCP's sandbox and is limited to standard Python plus Prefab; generated UIs are not persisted as artifacts in this stage.
