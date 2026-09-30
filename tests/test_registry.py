@@ -49,6 +49,25 @@ def test_relationships_resolve_to_objects() -> None:
     }
 
 
+def test_incoming_relationships_resolve_sources() -> None:
+    registry = Registry(ROOT)
+
+    mac_incoming = registry.incoming_objects("machine.mac-mini")
+    assert {obj.id for obj in mac_incoming["runs_on"]} == {
+        "agent.pi.mac",
+        "agent.codex.mac",
+    }
+
+    evidence_incoming = registry.incoming_objects("policy.evidence-before-completion")
+    assert {obj.id for obj in evidence_incoming["governed_by"]} == {
+        "agent.pi.mac",
+        "agent.codex.mac",
+    }
+    assert {obj.id for obj in evidence_incoming["uses"]} == {
+        "playbook.root-cause-analysis"
+    }
+
+
 def test_missing_relationship_reference_is_reported(tmp_path: Path) -> None:
     (tmp_path / "broken.yaml").write_text(
         "id: agent.broken\nkind: agent\nname: Broken\nrelationships:\n  uses: [skill.missing]\n",
