@@ -25,6 +25,21 @@ Environment Catalog UI
 
 This project is intentionally local and narrow. It has no database, authentication, React/Next.js frontend, workers, agent runtime, or workflow engine.
 
+## Catalog UI
+
+The Prefab catalog currently supports:
+
+- kind filters
+- status filters
+- sorting and pagination
+- search across names, stable IDs, descriptions, capabilities, relationships, metadata, and host/location
+- resolved machine display names
+- expandable object details
+- resolved outgoing relationships
+- reverse/incoming relationships
+
+The browser path is verified in CI using Chromium against a real `fastmcp dev apps` preview rather than only testing Python component construction.
+
 ## Install and run
 
 Create or refresh the isolated environment:
@@ -114,4 +129,4 @@ The seed set includes Pi, Codex, Mac Mini, Zima, OVH, two skills, two policies, 
 
 ## Tests
 
-The test suite covers YAML loading, Pydantic defaults and validation, search, filters, relationship resolution, missing relationship references, duplicate IDs, and registry-root configuration.
+The test suite covers YAML loading, Pydantic defaults and validation, search, filters, outgoing/incoming relationship resolution, missing relationship references, duplicate IDs, registry-root configuration, and catalog UI construction. GitHub Actions additionally runs a real Chromium smoke verification for the rendered Prefab app.
