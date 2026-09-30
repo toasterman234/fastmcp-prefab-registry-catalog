@@ -55,10 +55,19 @@ def registry_list(kind: str | None = None, status: str | None = None) -> list[di
 
 @mcp.tool()
 def registry_related(object_id: str) -> dict[str, list[dict[str, Any]]]:
-    """Resolve all declared relationships for one registry object."""
+    """Resolve outgoing relationships declared by one registry object."""
     return {
         relation: _objects_payload(objects)
         for relation, objects in registry.related_objects(object_id).items()
+    }
+
+
+@mcp.tool()
+def registry_incoming(object_id: str) -> dict[str, list[dict[str, Any]]]:
+    """Resolve registry objects that point to the selected object."""
+    return {
+        relation: _objects_payload(objects)
+        for relation, objects in registry.incoming_objects(object_id).items()
     }
 
 
@@ -86,7 +95,9 @@ def registry_objects_resource() -> str:
 @mcp.tool(app=True)
 def catalog() -> PrefabApp:
     """Browse the Environment Catalog in a compact Prefab UI."""
-    return build_catalog_app(registry.list_objects(), _status_summary())
+    objects = registry.list_objects()
+    incoming = {obj.id: registry.incoming_objects(obj.id) for obj in objects}
+    return build_catalog_app(objects, _status_summary(), incoming)
 
 
 if __name__ == "__main__":

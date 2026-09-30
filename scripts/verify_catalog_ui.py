@@ -1,0 +1,90 @@
+from __future__ import annotations
+
+import os
+import sys
+import time
+from pathlib import Path
+from urllib.parse import urlencode
+
+from playwright.sync_api import Frame, Page, sync_playwright
+
+DEV_PORT = int(os.environ.get("CATALOG_DEV_PORT", "9090"))
+BASE_URL = f"http://127.0.0.1:{DEV_PORT}"
+SCREENSHOT = Path(os.environ.get("CATALOG_SCREENSHOT", "/tmp/catalog-stage2.png"))
+
+
+def find_app_frame(page: Page, timeout_seconds: float = 30.0) -> Frame:
+    deadline = time.time() + timeout_seconds
+    while time.time() < deadline:
+        for frame in page.frames:
+            try:
+                if frame.get_by_text("Environment Catalog", exact=True).count():
+                    return frame
+            except Exception:
+                pass
+        time.sleep(0.25)
+    raise AssertionError("Prefab app frame did not render Environment Catalog")
+
+
+def assert_visible(frame: Frame, text: str) -> None:
+    locator = frame.get_by_text(text, exact=True)
+    if locator.count() == 0 or not locator.first.is_visible():
+        raise AssertionError(f"Expected visible text: {text!r}")
+
+
+def assert_not_visible(frame: Frame, text: str) -> None:
+    locator = frame.get_by_text(text, exact=True)
+    if locator.count() and locator.first.is_visible():
+        raise AssertionError(f"Expected text to be filtered out: {text!r}")
+
+
+def main() -> int:
+    launch_url = BASE_URL + "/launch?" + urlencode({"tool": "catalog", "args": "{}"})
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page(viewport={"width": 1440, "height": 1000})
+        page.goto(launch_url, wait_until="domcontentloaded", timeout=30_000)
+
+        app = find_app_frame(page)
+        assert_visible(app, "Environment Catalog")
+        assert_visible(app, "Everything (16)")
+
+        agents_tab = app.get_by_role("tab", name="Agents (2)")
+        agents_tab.click()
+        assert_visible(app, "Pi")
+        assert_visible(app, "Codex")
+
+        active_tab = app.locator('[role="tab"]:visible', has_text="Active (2)").first
+        if active_tab.count() == 0:
+            raise AssertionError("Expected visible Active (2) status filter")
+        active_tab.click()
+
+        search = app.locator("input:visible").first
+        if search.count() == 0:
+            raise AssertionError("Expected a visible DataTable search input")
+        search.fill("agent.pi.mac")
+        assert_visible(app, "Pi")
+        assert_not_visible(app, "Codex")
+
+        search.fill("")
+        policies_tab = app.get_by_role("tab", name="Policys (2)")
+        if policies_tab.count() == 0:
+            # Keep the verification resilient if the UI pluralization is improved.
+            policies_tab = app.get_by_role("tab", name="Policies (2)")
+        policies_tab.first.click()
+        assert_visible(app, "Browser Verification Required")
+        assert_visible(app, "Evidence Before Completion")
+
+        SCREENSHOT.parent.mkdir(parents=True, exist_ok=True)
+        page.screenshot(path=str(SCREENSHOT), full_page=True)
+        print(
+            "BROWSER_VERIFY succeeded: kind filter, status filter, full-object ID search, "
+            f"and policy view rendered; screenshot={SCREENSHOT}"
+        )
+        browser.close()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

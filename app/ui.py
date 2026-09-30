@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from prefab_ui.app import PrefabApp
@@ -12,10 +13,14 @@ from prefab_ui.components import (
     Heading,
     Row,
     Separator,
+    Tab,
+    Tabs,
     Text,
 )
 
 from app.models import RegistryObject
+
+IncomingRelationships = dict[str, dict[str, list[RegistryObject]]]
 
 
 def _status_variant(status: str) -> str:
@@ -28,77 +33,260 @@ def _status_variant(status: str) -> str:
     }.get(status.casefold(), "secondary")
 
 
-def _location(obj: RegistryObject) -> str:
-    if obj.location and obj.location.machine:
-        return obj.location.machine
-    return "-"
+def _location(obj: RegistryObject, objects_by_id: dict[str, RegistryObject]) -> str:
+    if not obj.location or not obj.location.machine:
+        return "-"
+    machine_id = obj.location.machine
+    machine = objects_by_id.get(machine_id)
+    return machine.name if machine else machine_id
 
 
-def _detail_view(obj: RegistryObject) -> Column:
-    relationship_lines = [
-        f"{relation} → {target}"
+def _display_object(obj: RegistryObject) -> str:
+    return f"{obj.name} ({obj.id})"
+
+
+def _search_blob(
+    obj: RegistryObject,
+    objects_by_id: dict[str, RegistryObject],
+    incoming: IncomingRelationships,
+) -> str:
+    outgoing_parts: list[str] = []
+    for relation, targets in obj.relationships.items():
+        outgoing_parts.append(relation)
+        for target_id in targets:
+            outgoing_parts.append(target_id)
+            if target := objects_by_id.get(target_id):
+                outgoing_parts.append(target.name)
+
+    incoming_parts: list[str] = []
+    for relation, sources in incoming.get(obj.id, {}).items():
+        incoming_parts.append(relation)
+        for source in sources:
+            incoming_parts.extend([source.id, source.name])
+
+    values = [
+        obj.id,
+        obj.kind,
+        obj.name,
+        obj.description,
+        obj.status,
+        _location(obj, objects_by_id),
+        *obj.capabilities,
+        *outgoing_parts,
+        *incoming_parts,
+        json.dumps(obj.metadata, sort_keys=True, default=str),
+    ]
+    return " ".join(value for value in values if value).casefold()
+
+
+def _detail_view(
+    obj: RegistryObject,
+    objects_by_id: dict[str, RegistryObject],
+    incoming: IncomingRelationships,
+) -> Column:
+    outgoing_lines = [
+        f"{relation} → {_display_object(target)}"
         for relation, targets in obj.relationships.items()
-        for target in targets
-    ] or ["None"]
+        for target_id in targets
+        if (target := objects_by_id.get(target_id))
+    ]
+    unresolved_outgoing = [
+        f"{relation} → {target_id} (unresolved)"
+        for relation, targets in obj.relationships.items()
+        for target_id in targets
+        if target_id not in objects_by_id
+    ]
+    incoming_lines = [
+        f"{relation} ← {_display_object(source)}"
+        for relation, sources in incoming.get(obj.id, {}).items()
+        for source in sources
+    ]
+
     return Column(
-        gap=1,
+        gap=2,
         css_class="p-3 text-sm bg-muted/30 rounded-md",
         children=[
-            Text(f"ID: {obj.id}"),
-            Text(f"Kind: {obj.kind}"),
-            Text(f"Description: {obj.description}"),
-            Text(f"Status: {obj.status}"),
-            Text(f"Capabilities: {', '.join(obj.capabilities) or 'None'}"),
-            Text(f"Location: {_location(obj)}"),
-            Text(f"Metadata: {obj.metadata or 'None'}"),
-            Text("Relationships:"),
-            *[Text(f"  {line}") for line in relationship_lines],
+            Row(
+                gap=2,
+                align="center",
+                css_class="flex-wrap",
+                children=[
+                    Badge(obj.kind.title(), variant="secondary"),
+                    Badge(obj.status, variant=_status_variant(obj.status)),
+                    Text(obj.id, css_class="font-mono text-xs text-muted-foreground"),
+                ],
+            ),
+            Text(obj.description or "No description."),
+            Text(
+                f"Capabilities: {', '.join(obj.capabilities) or 'None'}",
+                css_class="text-muted-foreground",
+            ),
+            Text(
+                f"Host / location: {_location(obj, objects_by_id)}",
+                css_class="text-muted-foreground",
+            ),
+            Separator(),
+            Text("Outgoing relationships", css_class="font-medium"),
+            *[Text(line) for line in (outgoing_lines + unresolved_outgoing or ["None"])],
+            Text("Incoming relationships", css_class="font-medium pt-1"),
+            *[Text(line) for line in (incoming_lines or ["None"])],
+            Text(
+                f"Metadata: {json.dumps(obj.metadata, sort_keys=True, default=str) if obj.metadata else 'None'}",
+                css_class="text-xs text-muted-foreground pt-1",
+            ),
         ],
     )
 
 
-def build_catalog_app(objects: list[RegistryObject], status_summary: str) -> PrefabApp:
-    rows: list[dict[str, Any]] = []
+def _catalog_table(
+    objects: list[RegistryObject],
+    objects_by_id: dict[str, RegistryObject],
+    incoming: IncomingRelationships,
+) -> DataTable | Text:
+    if not objects:
+        return Text("No objects match these filters.", css_class="text-sm text-muted-foreground")
+
+    rows: list[dict[str, Any] | ExpandableRow] = []
     for obj in objects:
         row = {
             "type": obj.kind.title(),
             "name": obj.name,
             "status": Badge(obj.status, variant=_status_variant(obj.status)),
             "description": obj.description,
-            "location": _location(obj),
+            "capabilities": ", ".join(obj.capabilities) or "-",
+            "location": _location(obj, objects_by_id),
+            "_search": _search_blob(obj, objects_by_id, incoming),
         }
-        rows.append(ExpandableRow(row, detail=_detail_view(obj)))
+        rows.append(
+            ExpandableRow(
+                row,
+                detail=_detail_view(obj, objects_by_id, incoming),
+            )
+        )
 
-    kind_counts: dict[str, int] = {}
-    for obj in objects:
-        kind_counts[obj.kind] = kind_counts.get(obj.kind, 0) + 1
-    filters = " · ".join(["Everything"] + [f"{kind.title()} ({count})" for kind, count in sorted(kind_counts.items())])
+    return DataTable(
+        columns=[
+            DataTableColumn(key="type", header="Type", sortable=True),
+            DataTableColumn(key="name", header="Name", sortable=True),
+            DataTableColumn(key="status", header="Status", sortable=True),
+            DataTableColumn(key="description", header="Description", sortable=True),
+            DataTableColumn(
+                key="capabilities",
+                header="Capabilities",
+                sortable=True,
+                header_class="hidden lg:table-cell",
+                cell_class="hidden lg:table-cell",
+            ),
+            DataTableColumn(
+                key="location",
+                header="Host / location",
+                sortable=True,
+                header_class="hidden md:table-cell",
+                cell_class="hidden md:table-cell",
+            ),
+            DataTableColumn(
+                key="_search",
+                header="Search index",
+                header_class="hidden",
+                cell_class="hidden",
+            ),
+        ],
+        rows=rows,
+        search=True,
+        paginated=True,
+        page_size=12,
+    )
+
+
+def _status_tabs(
+    objects: list[RegistryObject],
+    objects_by_id: dict[str, RegistryObject],
+    incoming: IncomingRelationships,
+    state_name: str,
+) -> Tabs:
+    statuses = sorted({obj.status for obj in objects}, key=str.casefold)
+    tabs = [
+        Tab(
+            f"All ({len(objects)})",
+            value="all",
+            children=[_catalog_table(objects, objects_by_id, incoming)],
+        )
+    ]
+    for status in statuses:
+        filtered = [obj for obj in objects if obj.status.casefold() == status.casefold()]
+        tabs.append(
+            Tab(
+                f"{status.title()} ({len(filtered)})",
+                value=status.casefold(),
+                children=[_catalog_table(filtered, objects_by_id, incoming)],
+            )
+        )
+    return Tabs(
+        name=state_name,
+        value="all",
+        variant="line",
+        children=tabs,
+        css_class="w-full",
+    )
+
+
+def build_catalog_app(
+    objects: list[RegistryObject],
+    status_summary: str,
+    incoming: IncomingRelationships | None = None,
+) -> PrefabApp:
+    incoming = incoming or {}
+    objects_by_id = {obj.id: obj for obj in objects}
+
+    kind_tabs = [
+        Tab(
+            f"Everything ({len(objects)})",
+            value="all",
+            children=[_status_tabs(objects, objects_by_id, incoming, "catalog-status-all")],
+        )
+    ]
+    for kind in sorted({obj.kind for obj in objects}, key=str.casefold):
+        filtered = [obj for obj in objects if obj.kind.casefold() == kind.casefold()]
+        kind_tabs.append(
+            Tab(
+                f"{kind.title()}s ({len(filtered)})",
+                value=kind.casefold(),
+                children=[
+                    _status_tabs(
+                        filtered,
+                        objects_by_id,
+                        incoming,
+                        f"catalog-status-{kind.casefold()}",
+                    )
+                ],
+            )
+        )
 
     with PrefabApp(title="Environment Catalog", mode="light") as app:
         with Column(gap=4, css_class="p-4 sm:p-6 max-w-screen-2xl mx-auto"):
             with Row(gap=4, align="center", css_class="flex-wrap"):
                 with Column(gap=1, css_class="flex-1 min-w-64"):
                     Heading("Environment Catalog")
-                    Text(f"{len(objects)} objects · {status_summary}", css_class="text-sm text-muted-foreground")
-                Text("YAML-backed v0 registry", css_class="text-sm text-muted-foreground")
+                    Text(
+                        f"{len(objects)} objects · {status_summary}",
+                        css_class="text-sm text-muted-foreground",
+                    )
+                Text("YAML-backed registry", css_class="text-sm text-muted-foreground")
             Separator()
-            Text("Kinds: " + filters, css_class="text-sm")
-            Text("Use the table search to find by type, name, description, capability, ID, or relationship.", css_class="text-sm text-muted-foreground")
-            DataTable(
-                columns=[
-                    DataTableColumn(key="type", header="Type", sortable=True),
-                    DataTableColumn(key="name", header="Name", sortable=True),
-                    DataTableColumn(key="status", header="Status", sortable=True),
-                    DataTableColumn(key="description", header="Description", sortable=True),
-                    DataTableColumn(key="location", header="Host / location", sortable=True),
-                ],
-                rows=rows,
-                search=True,
-                paginated=True,
-                pageSize=12,
+            Text(
+                "Filter by kind, then status. Expand a row for resolved outgoing and incoming relationships.",
+                css_class="text-sm text-muted-foreground",
             )
-            Separator()
-            Heading("Object details", level=2)
-            Text("The MCP registry_get and registry_related tools expose complete details and resolved relationships for any selected ID.", css_class="text-sm text-muted-foreground")
+            Text(
+                "Search within the selected filters covers names, IDs, descriptions, capabilities, relationships, metadata, and host/location.",
+                css_class="text-sm text-muted-foreground",
+            )
+            Tabs(
+                name="catalog-kind",
+                value="all",
+                variant="line",
+                children=kind_tabs,
+                css_class="w-full overflow-x-auto",
+            )
 
     return app

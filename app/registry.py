@@ -90,6 +90,7 @@ class Registry:
         ]
 
     def related_objects(self, object_id: str) -> dict[str, list[RegistryObject]]:
+        """Resolve outgoing relationships declared by one object."""
         obj = self.get_object(object_id)
         if obj is None:
             return {}
@@ -97,6 +98,15 @@ class Registry:
             relation: [related for target in targets if (related := self.get_object(target))]
             for relation, targets in obj.relationships.items()
         }
+
+    def incoming_objects(self, object_id: str) -> dict[str, list[RegistryObject]]:
+        """Resolve objects that point to object_id, grouped by relationship name."""
+        incoming: dict[str, list[RegistryObject]] = {}
+        for source in self._objects:
+            for relation, targets in source.relationships.items():
+                if object_id in targets:
+                    incoming.setdefault(relation, []).append(source)
+        return incoming
 
     def validate_registry(self) -> ValidationReport:
         issues = list(self._load_errors)
@@ -166,6 +176,10 @@ def filter_objects(kind: str | None = None, status: str | None = None) -> list[R
 
 def related_objects(object_id: str) -> dict[str, list[RegistryObject]]:
     return registry.related_objects(object_id)
+
+
+def incoming_objects(object_id: str) -> dict[str, list[RegistryObject]]:
+    return registry.incoming_objects(object_id)
 
 
 def validate_registry() -> ValidationReport:
