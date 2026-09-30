@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from app.registry import Registry
-from app.ui import _location, _search_blob, build_catalog_app
+from app.ui import _kind_plural, _location, _search_blob, build_catalog_app
 
 
 ROOT = Path(__file__).resolve().parents[1] / "registry"
@@ -29,6 +29,12 @@ def test_search_blob_includes_nonvisible_registry_fields() -> None:
     assert "policy.browser-verification-required" in blob
     assert "mac mini" in blob
     assert "example" in blob
+
+
+def test_kind_pluralization_is_human_readable() -> None:
+    assert _kind_plural("agent") == "Agents"
+    assert _kind_plural("policy") == "Policies"
+    assert _kind_plural("database") == "Databases"
 
 
 def test_location_resolves_machine_display_name() -> None:
