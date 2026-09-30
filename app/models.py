@@ -39,6 +39,7 @@ class InterfaceSpec(BaseModel):
     type: str
     uri: str | None = None
     adapter: str | None = None
+    namespace: str | None = None
     status: Literal["declared", "available", "unavailable"] = "declared"
     operations: list[str] = Field(default_factory=list)
 

@@ -173,3 +173,33 @@ When `SKILLS_ROOTS` is configured, `SkillsDirectoryProvider(reload=True)` expose
 A successful provider discovery is runtime evidence for an `available` `mcp-resource` interface. Matching YAML skills retain catalog capabilities and relationships while the discovered directory becomes the external content source.
 
 This path is read-only and coexists with `GenerativeUI()`. FastMCP 4.0.10 exposes directory-backed skills through ordinary MCP resources; this application does not claim the separate standardized Skills protocol extension.
+
+## MCP federation
+
+Stage 7 turns selected catalog interfaces into real FastMCP proxy mounts without creating a second registry:
+
+```text
+RegistryObject
+  └─ interface(type=mcp, adapter=fastmcp-proxy, namespace=...)
+                │
+                ├─ create_proxy(target)
+                ├─ mount(namespace=...)
+                │       ↓
+                │   namespaced MCP tools/resources/prompts
+                │
+                └─ direct Client probe
+                        ↓
+                  FederationSnapshot
+                        ↓
+                    CatalogView
+```
+
+The proxy mount and discovery probe are deliberately separate. A declaration alone stays `declared`; a successful mount plus successful upstream probe yields a runtime `available` interface. A failed mount or probe yields `unavailable`. These states are overlays and never rewrite YAML.
+
+Discovered component names and counts are stored under `metadata.federation[namespace]`, while generic capabilities such as `mcp-tools`, `mcp-resources`, and `mcp-prompts` are added to the runtime projection. Catalog search indexes that metadata so an agent or human can find the owning resource by an upstream tool/prompt/resource name.
+
+FastMCP namespacing is the collision boundary. Upstream tools/prompts become `<namespace>_<name>` through the parent server, while resource URIs are namespace-transformed by FastMCP.
+
+Discovery is on-demand and cached for 30 seconds. There is no background polling worker. `mcp_federation_status(refresh=true)` and `/api/catalog?refresh_mcp=true` are explicit read-back paths.
+
+Stage 7 intentionally does not add credential storage, OAuth configuration, package/command config targets, server auto-scanning, mutation/writeback, or a second inventory. Catalog URIs must not contain secrets.

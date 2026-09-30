@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
@@ -167,10 +168,12 @@ class Registry:
                     interface.type,
                     interface.uri or "",
                     interface.adapter or "",
+                    interface.namespace or "",
                     interface.status,
                     *interface.operations,
                 ]
             )
+        values.append(json.dumps(obj.metadata, sort_keys=True, default=str))
         return " ".join(values).casefold()
 
 

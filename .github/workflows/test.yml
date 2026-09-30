@@ -31,8 +31,38 @@ jobs:
         run: python -m pip install -e '.[test,ui-test]'
       - name: Install Chromium
         run: python -m playwright install --with-deps chromium
-      - name: Start FastMCP Apps preview with real skill discovery
+      - name: Prepare live federation registry
+        run: |
+          rm -rf /tmp/registry-live
+          cp -R registry /tmp/registry-live
+          cat > /tmp/registry-live/resources/federation-fixture.yaml <<EOF
+          id: resource.federation-fixture
+          kind: resource
+          name: MCP Federation Fixture
+          description: Test-only live MCP server for browser and API verification
+          status: active
+          source:
+            type: registry-yaml
+            uri: registry://resources/federation-fixture.yaml
+            authority: catalog
+            refresh: manual
+            writeback: none
+          interfaces:
+            - type: mcp
+              uri: file://${{ github.workspace }}/tests/fixtures/mcp/backend.py
+              adapter: fastmcp-proxy
+              namespace: fixture
+              status: declared
+              operations: []
+          capabilities: []
+          relationships: {}
+          metadata:
+            seed: false
+            test_fixture: true
+          EOF
+      - name: Start FastMCP Apps preview with real discovery
         env:
+          REGISTRY_ROOT: /tmp/registry-live
           SKILLS_ROOTS: ${{ github.workspace }}/tests/fixtures/skills
         run: |
           fastmcp dev apps app/server.py --mcp-port 9000 --dev-port 9090 --no-reload > /tmp/fastmcp-apps.log 2>&1 &
@@ -48,6 +78,7 @@ jobs:
       - name: Verify catalog in Chromium
         env:
           CATALOG_DEV_PORT: "9090"
+          CATALOG_EXPECTED_COUNT: "18"
         run: python scripts/verify_catalog_ui.py
       - name: Verify skill resources through FastMCP HTTP
         run: |
@@ -80,12 +111,19 @@ jobs:
           with urlopen("http://127.0.0.1:9000/api/catalog") as response:
               payload = json.load(response)
 
-          assert len(payload["objects"]) == 17
+          assert len(payload["objects"]) == 18
           skills = payload["discovery"]["skills"]
           assert skills["discovered_count"] == 2
           ids = {obj["id"] for obj in payload["objects"]}
           assert "skill.discovered-test" in ids
-          print("CATALOG_HTTP_VERIFY succeeded: runtime skill projection is present")
+          assert "resource.federation-fixture" in ids
+          federation = payload["discovery"]["mcp_federation"]
+          assert federation["configured_count"] == 1
+          assert federation["available_count"] == 1
+          fixture = next(obj for obj in payload["objects"] if obj["id"] == "resource.federation-fixture")
+          assert fixture["interfaces"][0]["status"] == "available"
+          assert fixture["metadata"]["federation"]["fixture"]["components"]["tools"] == ["echo"]
+          print("CATALOG_HTTP_VERIFY succeeded: skill and MCP federation projections are present")
           PY
       - uses: actions/setup-node@v5
         with:

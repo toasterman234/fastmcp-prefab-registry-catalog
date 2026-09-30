@@ -15,6 +15,7 @@ This repository is a minimal local registry/catalog built with Python, FastMCP, 
 - The catalog UI has real kind/status filters, full-object search indexing, resolved host names, source metadata, declared interfaces, and expandable outgoing/incoming relationships.
 - Every seed record declares its YAML catalog source as authoritative by default. Runtime-discovered skills may overlay matching skill records with `authority: external` and an `available` MCP resource interface after FastMCP discovery succeeds.
 - `SKILLS_ROOTS` enables real directory-backed skill discovery. No configured roots means no runtime skill projection.
+- MCP federation is opt-in through catalog interfaces with `type: mcp` and `adapter: fastmcp-proxy`; other MCP-looking interfaces remain descriptive only.
 - CI includes a real Chromium smoke check against the rendered FastMCP Prefab app.
 
 ## Architecture invariant
@@ -36,11 +37,13 @@ Do not move YAML loading into FastMCP handlers, do not make Prefab the data stor
 | `app/registry.py` | Durable YAML registry loading and validation |
 | `app/catalog.py` | Read-only merged catalog view over durable records plus runtime projections |
 | `app/skill_discovery.py` | FastMCP skill-root configuration, provider creation, and runtime skill projection |
+| `app/mcp_federation.py` | Catalog-to-proxy bindings, namespaced mounts, upstream discovery/cache, and runtime MCP overlays |
 | `app/server.py` | FastMCP server, tools, resources, `catalog()` |
 | `app/ui.py` | Prefab catalog composition |
 | `tests/test_registry.py` | Registry behavior, relationship direction, and registry-root tests |
 | `tests/test_ui.py` | UI helper/catalog-construction tests |
 | `tests/test_skills.py` | Real `SkillsDirectoryProvider` resource/projection tests |
+| `tests/test_mcp_federation.py` | Real subprocess MCP proxy/discovery/tool-call tests |
 | `scripts/verify_catalog_ui.py` | Playwright browser verification against `fastmcp dev apps` |
 | `docs/ARCHITECTURE.md` | Responsibility boundaries and data flow |
 | `docs/NEXT.md` | Explicitly deferred extensions |
@@ -101,9 +104,9 @@ Verify:
 
 1. `python -m pip install -e '.[test]'` succeeds in a clean environment.
 2. `.venv/bin/python -m pytest -q`
-3. MCP discovery finds the ten expected registry/skill/Generative UI tools; with `SKILLS_ROOTS` configured, it also exposes discovered `skill://` resources.
+3. MCP discovery finds the eleven expected registry/skill/federation/Generative UI tools; configured skills and federated MCP servers expose their additional resources/tools through providers.
 4. `registry_validate` reports valid YAML, no duplicate IDs, and no broken relationship references.
-5. UI/provider changes pass the real-browser job, workspace Apps check, HTTP catalog projection check, and skill-resource check in `.github/workflows/test.yml`.
+5. UI/provider changes pass the real-browser job, live MCP federation projection check, workspace Apps check, HTTP catalog projection check, and skill-resource check in `.github/workflows/test.yml`.
 6. GitHub Actions is read back green for the branch/PR head being claimed.
 
 ## Intentional non-goals
@@ -117,3 +120,23 @@ export SKILLS_ROOTS="/path/to/skills:/another/path/to/skills"
 ```
 
 Use the platform path separator (`:` on macOS/Linux). Each root contains immediate child skill directories with `SKILL.md`. Do not mark an interface `available` merely because it is configured; the skill projection does so only after the provider discovers the skill.
+
+## MCP federation
+
+Only interfaces with this shape are mounted:
+
+```yaml
+- type: mcp
+  uri: https://example.internal/mcp  # or file:///absolute/path/server.py
+  adapter: fastmcp-proxy
+  namespace: example
+  status: declared
+```
+
+Rules:
+- namespaces must be unique and are normalized to MCP-safe names;
+- do not encode secrets in `uri`;
+- HTTP(S) and `file://` targets are supported in this stage;
+- upstream component discovery is cached for 30 seconds;
+- use `mcp_federation_status(refresh=true)` for a fresh probe;
+- runtime `available` / `unavailable` status is projection evidence only and is never written back to YAML.

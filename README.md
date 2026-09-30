@@ -213,3 +213,26 @@ FastMCP `SkillsDirectoryProvider` scans each root for immediate child directorie
 Runtime skill IDs are stable as `skill.<directory-name>`. A successfully discovered skill uses `authority: external`, `refresh: on-read`, `writeback: none`, and an `mcp-resource` interface with `status: available`. Matching YAML skill records retain catalog capabilities and relationships as annotations.
 
 Stage 6 is read-only: it never silently creates, edits, deletes, copies, or synchronizes skill files. See `docs/SKILL_DISCOVERY.md`.
+
+## MCP federation
+
+Catalog objects can opt into live MCP federation with an explicit interface:
+
+```yaml
+interfaces:
+  - type: mcp
+    uri: https://example.internal/mcp
+    adapter: fastmcp-proxy
+    namespace: example
+    status: declared
+```
+
+`adapter: fastmcp-proxy` is the opt-in boundary. Existing descriptive MCP interfaces with other adapters are not automatically connected.
+
+Stage 7 supports HTTP(S) MCP endpoints and local Python MCP server files expressed as `file://` URIs. FastMCP mounts each backend lazily with `create_proxy()` and `mount(..., namespace=...)`. The namespace prevents tool/prompt collisions; for example an upstream tool named `search` mounted under `github` is exposed as `github_search`.
+
+The catalog separately probes the upstream server and records tools, resources, resource templates, prompts, protocol version, and connectivity under `metadata.federation`. Only a successful probe plus successful proxy mount promotes the interface to `status: available`; failures project as `unavailable` without changing durable YAML.
+
+Runtime discovery is cached for 30 seconds. Use the MCP tool `mcp_federation_status(refresh=true)` or request `/api/catalog?refresh_mcp=true` for an explicit fresh read-back.
+
+Do not put credentials or tokens in catalog URIs. Auth/secret binding is intentionally outside Stage 7. See `docs/MCP_FEDERATION.md`.

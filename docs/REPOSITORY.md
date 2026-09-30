@@ -16,9 +16,10 @@ It is not a general platform, graph database, admin SaaS dashboard, workflow eng
 - Kept registry YAML external to the Python distribution; setuptools explicitly packages `app` only.
 - Implemented list, get, search, kind/status filtering, outgoing relationship resolution, incoming/reverse relationship resolution, duplicate-ID checks, and broken-reference checks.
 - Added 16 seed/example records; each now records its catalog YAML source authority, and selected objects have explicitly declared (not live) interfaces.
-- Exposed FastMCP tools for registry operations plus `skill_discovery_status`, deterministic `catalog`, and the native Generative UI provider tools.
+- Exposed FastMCP tools for registry operations plus `skill_discovery_status`, `mcp_federation_status`, deterministic `catalog`, and the native Generative UI provider tools.
 - Exposed a complete merged-catalog resource and an individual object resource template.
 - Added optional `SKILLS_ROOTS` discovery through FastMCP `SkillsDirectoryProvider`; discovered `SKILL.md` files and manifests become real MCP resources and runtime catalog objects.
+- Added catalog-declared MCP federation through `adapter: fastmcp-proxy`, namespaced `create_proxy()` mounts, direct upstream component discovery, and runtime availability overlays.
 - Added a compact Prefab catalog with real kind/status filters, full-object search indexing, source/interface metadata, resolved machine display names, status badges, pagination, and expandable outgoing/incoming relationship details.
 - Added unit tests plus a real-browser GitHub Actions job that launches `fastmcp dev apps` and verifies the rendered app in Chromium.
 
@@ -69,10 +70,10 @@ The project-local FastMCP binary must be used. A globally resolved older FastMCP
 
 ## Current limitations
 
-- Live provider binding exists for configured directory-backed skills; other source/interface entries remain descriptive.
+- Live provider binding exists for configured directory-backed skills and explicit `fastmcp-proxy` MCP interfaces; other source/interface entries remain descriptive.
 - No editing or CRUD.
 - No SQLite or other persistence provider.
-- No discovery of files, MCP servers, machines, or live status.
+- No arbitrary file/document discovery, machine/service health, or automatic network/server scanning.
 - No agent invocation or policy evaluation.
 - No JEv routing.
 - No graph visualization.
@@ -89,3 +90,23 @@ Stage 6 verification covers:
 - coexistence with the existing Generative UI workspace surface.
 
 A discovered skill's `mcp-resource` interface is marked `available` only after provider discovery in the running process. The separate standardized Skills protocol extension is not enabled here.
+
+## MCP federation verification
+
+Stage 7 uses a real local MCP subprocess fixture rather than a mocked component list. Tests verify:
+- proxy construction and namespaced mounting;
+- namespaced tool, prompt, and resource exposure;
+- a real proxied tool call;
+- direct upstream tool/resource/prompt discovery;
+- runtime `available` projection and component metadata;
+- catalog search by discovered component name;
+- temporary-registry browser/API verification with one live federated object;
+- preservation of the existing skill and Generative UI surfaces.
+
+The default seed catalog has no executable MCP proxy binding. The descriptive `resource.github` `mcp://github` interface remains inert because its adapter is `github`, not `fastmcp-proxy`.
+
+### Stage 7 verified baseline
+
+GitHub Actions run `36657579515` verified the live federation path with 30 passing tests plus browser/API/workspace checks. The CI catalog uses a temporary copy of the durable registry and injects a test-only `file://` MCP binding, so verification is realistic without adding fixture inventory to the seed catalog.
+
+The browser verified discovery metadata and runtime availability; `/api/catalog` verified one configured and one available MCP backend plus upstream `echo` tool evidence; the workspace verified `MCP: 1/1 available` while retaining the Generative UI Apps switcher.

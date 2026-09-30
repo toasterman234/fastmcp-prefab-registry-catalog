@@ -10,7 +10,8 @@ from playwright.sync_api import Frame, Page, sync_playwright
 
 DEV_PORT = int(os.environ.get("CATALOG_DEV_PORT", "9090"))
 BASE_URL = f"http://127.0.0.1:{DEV_PORT}"
-SCREENSHOT = Path(os.environ.get("CATALOG_SCREENSHOT", "/tmp/catalog-stage5.png"))
+SCREENSHOT = Path(os.environ.get("CATALOG_SCREENSHOT", "/tmp/catalog-stage7.png"))
+EXPECTED_COUNT = int(os.environ.get("CATALOG_EXPECTED_COUNT", "17"))
 
 
 def find_app_frame(page: Page, timeout_seconds: float = 30.0) -> Frame:
@@ -48,7 +49,7 @@ def main() -> int:
 
         app = find_app_frame(page)
         assert_visible(app, "Environment Catalog")
-        assert_visible(app, "Everything (17)")
+        assert_visible(app, f"Everything ({EXPECTED_COUNT})")
 
         skills_tab = app.get_by_role("tab", name="Skills (3)")
         skills_tab.click()
@@ -68,11 +69,19 @@ def main() -> int:
         assert_visible(app, "Discovered Test")
         assert_visible(app, "Browser Verification")
 
+        if EXPECTED_COUNT > 17:
+            app.get_by_role("tab", name=f"Everything ({EXPECTED_COUNT})").click()
+            federation_search = app.locator("input:visible").first
+            federation_search.fill("echo")
+            assert_visible(app, "MCP Federation Fixture")
+            federation_search.fill("mcp-tools")
+            assert_visible(app, "MCP Federation Fixture")
+
         SCREENSHOT.parent.mkdir(parents=True, exist_ok=True)
         page.screenshot(path=str(SCREENSHOT), full_page=True)
         print(
-            "BROWSER_VERIFY succeeded: real SKILL.md discovery, stable skill IDs, "
-            f"available MCP resource interfaces, and catalog projection rendered; screenshot={SCREENSHOT}"
+            "BROWSER_VERIFY succeeded: skill discovery, live MCP federation metadata, stable IDs, "
+            f"and available interfaces rendered; screenshot={SCREENSHOT}"
         )
         browser.close()
     return 0
