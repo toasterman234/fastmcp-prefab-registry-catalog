@@ -103,3 +103,36 @@ The Python distribution packages `app` only. Registry YAML is operational/domain
 - No broad platform abstractions
 
 The model accepts unknown extra fields to make new kinds possible without changing application architecture, while required common fields and source/interface semantics remain validated by Pydantic.
+
+
+## Workspace shell
+
+Stage 4 separates global workspace UX from Prefab app UX.
+
+```text
+Configured YAML registry
+      ↓
+Python registry domain layer
+      ↓
+FastMCP
+ ├─ MCP tools/resources
+ ├─ read-only /api/catalog projection
+ └─ Prefab / MCP App surfaces
+      ↓
+web/ workspace shell
+ ├─ Catalog / Bases-style projection
+ ├─ Inspector
+ ├─ Apps host surface
+ ├─ Artifacts
+ ├─ Runs
+ └─ Review
+```
+
+Responsibility boundary:
+- the shell owns navigation, density, workspace layout, and saved human-facing surfaces
+- FastMCP owns capabilities, tools/resources/providers, and the control/data interface
+- Prefab owns deterministic interactive app surfaces
+- generated UI belongs in the Apps surface rather than becoming the global shell
+- YAML remains authoritative; the shell never reads or writes registry YAML directly
+
+The current Apps embedding URL is a development bridge to `fastmcp dev apps`, not a claim of a production MCP Apps host. Artifacts, Runs, and Review are visible shell destinations but remain intentionally unbacked until authoritative models/providers exist.
