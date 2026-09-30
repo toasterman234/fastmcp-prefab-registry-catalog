@@ -23,7 +23,7 @@ app/server.py (FastMCP)
 Environment Catalog UI
 ```
 
-This project is intentionally local and narrow. It has no database, authentication, React/Next.js frontend, workers, agent runtime, or workflow engine.
+This project remains intentionally local and narrow. Stage 4 adds a small Next.js workspace shell under `web/`; it still has no database, production authentication, workers, agent runtime, or workflow engine.
 
 ## Catalog UI
 
@@ -153,3 +153,39 @@ The seed set includes Pi, Codex, Mac Mini, Zima, OVH, two skills, two policies, 
 ## Tests
 
 The test suite covers YAML loading, Pydantic defaults and source/interface validation, source/interface search, filters, outgoing/incoming relationship resolution, missing relationship references, duplicate IDs, registry-root configuration, and catalog UI construction. GitHub Actions additionally runs a real Chromium smoke verification for the rendered Prefab app.
+
+
+## Workspace shell
+
+The repository now separates the human workspace shell from Prefab app surfaces.
+
+```text
+FastMCP control/data layer
+   ├─ registry tools/resources
+   ├─ /api/catalog read-only projection
+   └─ Prefab/MCP Apps
+             ↓
+web/
+   ├─ Catalog
+   ├─ Inspector
+   ├─ Apps
+   ├─ Artifacts
+   ├─ Runs
+   └─ Review
+```
+
+Run FastMCP over HTTP for the shell catalog:
+
+```bash
+fastmcp run app/server.py --transport http --port 9000
+```
+
+Run the web shell:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+See [web/README.md](web/README.md) for the current development-host bridge and responsibility boundaries.
