@@ -59,3 +59,15 @@
   - browser search by stable ID, `cli://pi`, and `registry://agents/pi.yaml`
 - Browser receipt: `BROWSER_VERIFY succeeded: kind/status filters, ID search, source search, declared-interface search, and policy view rendered; screenshot=/tmp/catalog-stage3.png`.
 - Stage 4 is intentionally not started.
+
+
+### Stage 4: workspace shell separation
+- Issue #5 records the decision and acceptance criteria.
+- Started from verified PR #4 head `970c4a7400ea95c347ba71f828730d57ab36dfad`; this branch is intentionally downstream of PR #4.
+- Added `web/` as a separate Next.js workspace shell rather than modifying the FastMCP Apps development picker.
+- Added Catalog, object inspector, Apps, Artifacts, Runs, and Review destinations.
+- Catalog data is fetched from a read-only `/api/catalog` FastMCP custom route; the web shell does not read YAML directly and has no independent store.
+- The Apps surface embeds the existing configurable Prefab/FastMCP Apps URL as a transitional development bridge.
+- Artifacts, Runs, and Review deliberately show unbacked/empty states until authoritative models/providers exist.
+- Added a GitHub Actions web-shell build job.
+- Verification is not yet complete until the stacked PR head is read back green.
