@@ -1,0 +1,1 @@
+"""Environment Catalog application package."""

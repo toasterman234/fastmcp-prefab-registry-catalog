@@ -1,0 +1,25 @@
+- id: skill.root-cause-analysis
+  kind: skill
+  name: Root Cause Analysis
+  description: Diagnose failures by tracing evidence to the underlying cause
+  status: active
+  capabilities:
+    - diagnosis
+    - debugging
+  relationships: {}
+  metadata:
+    seed: true
+    example: true
+
+- id: skill.browser-verification
+  kind: skill
+  name: Browser Verification
+  description: Verify user-facing behavior in a real browser before claiming completion
+  status: active
+  capabilities:
+    - browser
+    - verification
+  relationships: {}
+  metadata:
+    seed: true
+    example: true

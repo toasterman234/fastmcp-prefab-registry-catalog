@@ -1,0 +1,23 @@
+id: agent.pi.mac
+kind: agent
+name: Pi
+description: Pi agent running on the Mac
+status: active
+location:
+  machine: machine.mac-mini
+capabilities:
+  - filesystem
+  - github
+  - browser
+relationships:
+  runs_on:
+    - machine.mac-mini
+  uses:
+    - skill.root-cause-analysis
+    - skill.browser-verification
+  governed_by:
+    - policy.browser-verification-required
+    - policy.evidence-before-completion
+metadata:
+  seed: true
+  example: true

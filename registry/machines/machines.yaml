@@ -1,0 +1,37 @@
+- id: machine.mac-mini
+  kind: machine
+  name: Mac Mini
+  description: Primary Mac Mini development machine
+  status: active
+  capabilities:
+    - macos
+    - local-development
+  relationships: {}
+  metadata:
+    seed: true
+    example: true
+
+- id: machine.zima
+  kind: machine
+  name: Zima
+  description: Zima home lab machine
+  status: active
+  capabilities:
+    - homelab
+  relationships: {}
+  metadata:
+    seed: true
+    example: true
+
+- id: machine.ovh
+  kind: machine
+  name: OVH
+  description: OVH VPS environment
+  status: active
+  capabilities:
+    - linux
+    - hosted
+  relationships: {}
+  metadata:
+    seed: true
+    example: true

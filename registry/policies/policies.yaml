@@ -1,0 +1,26 @@
+- id: policy.browser-verification-required
+  kind: policy
+  name: Browser Verification Required
+  description: User-facing web changes require rendered browser verification
+  status: active
+  capabilities:
+    - verification
+  relationships:
+    requires:
+      - skill.browser-verification
+  metadata:
+    seed: true
+    example: true
+
+- id: policy.evidence-before-completion
+  kind: policy
+  name: Evidence Before Completion
+  description: Completion claims require fresh checks and explicit evidence
+  status: active
+  capabilities:
+    - governance
+    - verification
+  relationships: {}
+  metadata:
+    seed: true
+    example: true

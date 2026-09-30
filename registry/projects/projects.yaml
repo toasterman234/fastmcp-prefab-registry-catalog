@@ -1,0 +1,14 @@
+id: project.master-repo
+kind: project
+name: master-repo
+description: Shared repository for environment governance and tooling
+status: active
+capabilities:
+  - source-control
+  - governance
+relationships:
+  uses:
+    - database.neo4j
+metadata:
+  seed: true
+  example: true

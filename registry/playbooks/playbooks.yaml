@@ -1,0 +1,15 @@
+id: playbook.root-cause-analysis
+kind: playbook
+name: Root Cause Analysis
+description: Repeatable evidence-driven workflow for diagnosing failures
+status: active
+capabilities:
+  - diagnosis
+  - verification
+relationships:
+  uses:
+    - skill.root-cause-analysis
+    - policy.evidence-before-completion
+metadata:
+  seed: true
+  example: true

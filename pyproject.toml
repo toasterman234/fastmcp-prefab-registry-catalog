@@ -1,0 +1,25 @@
+[project]
+name = "fastmcp-prefab-registry-catalog"
+version = "0.1.0"
+description = "Minimal YAML-backed environment registry exposed through FastMCP and Prefab"
+requires-python = ">=3.11"
+dependencies = [
+  "fastmcp[apps]==4.0.10",
+  "prefab-ui==0.20.2",
+  "pydantic>=2.13,<3",
+  "PyYAML>=6.0,<7",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=9,<10"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"

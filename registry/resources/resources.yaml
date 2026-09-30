@@ -1,0 +1,38 @@
+- id: resource.filesystem
+  kind: resource
+  name: filesystem
+  description: Local filesystem access
+  status: active
+  capabilities:
+    - read
+    - write
+  relationships: {}
+  metadata:
+    seed: true
+    example: true
+
+- id: resource.github
+  kind: resource
+  name: GitHub
+  description: GitHub repositories and collaboration surface
+  status: active
+  capabilities:
+    - source-control
+    - issues
+  relationships: {}
+  metadata:
+    seed: true
+    example: true
+
+- id: resource.browser
+  kind: resource
+  name: browser
+  description: Browser for user-facing verification
+  status: active
+  capabilities:
+    - navigation
+    - screenshots
+  relationships: {}
+  metadata:
+    seed: true
+    example: true

@@ -1,0 +1,25 @@
+- id: database.neo4j
+  kind: database
+  name: Neo4j
+  description: Graph database used by selected environment projects
+  status: active
+  capabilities:
+    - graph
+    - cypher
+  relationships: {}
+  metadata:
+    seed: true
+    example: true
+
+- id: database.memgraph
+  kind: database
+  name: Memgraph
+  description: Graph database for exploratory graph workloads
+  status: active
+  capabilities:
+    - graph
+    - cypher
+  relationships: {}
+  metadata:
+    seed: true
+    example: true

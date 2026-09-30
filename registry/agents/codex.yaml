@@ -1,0 +1,20 @@
+id: agent.codex.mac
+kind: agent
+name: Codex
+description: Codex coding agent running on the Mac
+status: active
+location:
+  machine: machine.mac-mini
+capabilities:
+  - filesystem
+  - github
+relationships:
+  runs_on:
+    - machine.mac-mini
+  uses:
+    - skill.root-cause-analysis
+  governed_by:
+    - policy.evidence-before-completion
+metadata:
+  seed: true
+  example: true
