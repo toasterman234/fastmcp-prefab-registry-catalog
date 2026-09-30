@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from prefab_ui.app import PrefabApp
@@ -21,6 +22,20 @@ from prefab_ui.components import (
 from app.models import RegistryObject
 
 IncomingRelationships = dict[str, dict[str, list[RegistryObject]]]
+
+
+def _state_key(value: str) -> str:
+    suffix = re.sub(r"[^A-Za-z0-9_]", "_", value.casefold())
+    return f"catalog_status_{suffix}"
+
+
+def _kind_plural(kind: str) -> str:
+    lower = kind.casefold()
+    if lower.endswith("y") and len(kind) > 1 and lower[-2] not in "aeiou":
+        return kind[:-1].title() + "ies"
+    if lower.endswith("s"):
+        return kind.title()
+    return kind.title() + "s"
 
 
 def _status_variant(status: str) -> str:
@@ -242,7 +257,7 @@ def build_catalog_app(
         Tab(
             f"Everything ({len(objects)})",
             value="all",
-            children=[_status_tabs(objects, objects_by_id, incoming, "catalog-status-all")],
+            children=[_status_tabs(objects, objects_by_id, incoming, "catalog_status_all")],
         )
     ]
     for kind in sorted({obj.kind for obj in objects}, key=str.casefold):
