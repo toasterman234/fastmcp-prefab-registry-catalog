@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Iterable
 
 import yaml
 from pydantic import ValidationError
@@ -142,7 +141,7 @@ class Registry:
 
     @staticmethod
     def _search_text(obj: RegistryObject) -> str:
-        values: Iterable[str] = [
+        values: list[str] = [
             obj.id,
             obj.kind,
             obj.name,
@@ -152,6 +151,26 @@ class Registry:
             *obj.relationships.keys(),
             *(target for targets in obj.relationships.values() for target in targets),
         ]
+        if obj.source:
+            values.extend(
+                [
+                    obj.source.type,
+                    obj.source.uri,
+                    obj.source.authority,
+                    obj.source.refresh,
+                    obj.source.writeback,
+                ]
+            )
+        for interface in obj.interfaces:
+            values.extend(
+                [
+                    interface.type,
+                    interface.uri or "",
+                    interface.adapter or "",
+                    interface.status,
+                    *interface.operations,
+                ]
+            )
         return " ".join(values).casefold()
 
 

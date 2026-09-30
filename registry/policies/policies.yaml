@@ -3,6 +3,12 @@
   name: Browser Verification Required
   description: User-facing web changes require rendered browser verification
   status: active
+  source:
+    type: registry-yaml
+    uri: registry://policies/policies.yaml#browser-verification-required
+    authority: catalog
+    refresh: manual
+    writeback: controlled
   capabilities:
     - verification
   relationships:
@@ -17,6 +23,12 @@
   name: Evidence Before Completion
   description: Completion claims require fresh checks and explicit evidence
   status: active
+  source:
+    type: registry-yaml
+    uri: registry://policies/policies.yaml#evidence-before-completion
+    authority: catalog
+    refresh: manual
+    writeback: controlled
   capabilities:
     - governance
     - verification

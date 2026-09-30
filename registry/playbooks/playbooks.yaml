@@ -3,6 +3,12 @@ kind: playbook
 name: Root Cause Analysis
 description: Repeatable evidence-driven workflow for diagnosing failures
 status: active
+source:
+  type: registry-yaml
+  uri: registry://playbooks/playbooks.yaml#root-cause-analysis
+  authority: catalog
+  refresh: manual
+  writeback: controlled
 capabilities:
   - diagnosis
   - verification

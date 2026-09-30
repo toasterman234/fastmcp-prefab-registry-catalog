@@ -5,6 +5,20 @@ description: Codex coding agent running on the Mac
 status: active
 location:
   machine: machine.mac-mini
+source:
+  type: registry-yaml
+  uri: registry://agents/codex.yaml
+  authority: catalog
+  refresh: manual
+  writeback: controlled
+interfaces:
+  - type: cli
+    uri: cli://codex
+    adapter: codex
+    status: declared
+    operations:
+      - inspect
+      - invoke
 capabilities:
   - filesystem
   - github

@@ -32,8 +32,10 @@ The Prefab catalog currently supports:
 - kind filters
 - status filters
 - sorting and pagination
-- search across names, stable IDs, descriptions, capabilities, relationships, metadata, and host/location
+- search across names, stable IDs, descriptions, capabilities, sources, interfaces, relationships, metadata, and host/location
 - resolved machine display names
+- source authority / refresh / writeback metadata
+- declared interface metadata
 - expandable object details
 - resolved outgoing relationships
 - reverse/incoming relationships
@@ -94,6 +96,20 @@ description: Pi agent running on the Mac
 status: active
 location:
   machine: machine.mac-mini
+source:
+  type: registry-yaml
+  uri: registry://agents/pi.yaml
+  authority: catalog
+  refresh: manual
+  writeback: controlled
+interfaces:
+  - type: cli
+    uri: cli://pi
+    adapter: pi
+    status: declared
+    operations:
+      - inspect
+      - invoke
 capabilities:
   - filesystem
 relationships:
@@ -104,7 +120,14 @@ metadata:
   example: true
 ```
 
-`location` is optional. `capabilities`, `relationships`, and `metadata` default to empty values. The Pydantic model allows additional fields so a new kind can add narrow metadata without changing the registry architecture.
+`location`, `source`, and `interfaces` are optional. `capabilities`, `interfaces`, `relationships`, and `metadata` default to empty values where applicable.
+
+`source` records where the catalog truth currently comes from:
+- `authority`: `catalog`, `external`, or `derived`
+- `refresh`: `manual`, `on-read`, `event`, or `poll`
+- `writeback`: `none`, `controlled`, or `direct`
+
+An interface with `status: declared` is descriptive only. It must not be treated as a live connection until a later adapter/provider stage verifies it.
 
 ## Adding an object
 
@@ -129,4 +152,4 @@ The seed set includes Pi, Codex, Mac Mini, Zima, OVH, two skills, two policies, 
 
 ## Tests
 
-The test suite covers YAML loading, Pydantic defaults and validation, search, filters, outgoing/incoming relationship resolution, missing relationship references, duplicate IDs, registry-root configuration, and catalog UI construction. GitHub Actions additionally runs a real Chromium smoke verification for the rendered Prefab app.
+The test suite covers YAML loading, Pydantic defaults and source/interface validation, source/interface search, filters, outgoing/incoming relationship resolution, missing relationship references, duplicate IDs, registry-root configuration, and catalog UI construction. GitHub Actions additionally runs a real Chromium smoke verification for the rendered Prefab app.

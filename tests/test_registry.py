@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.models import RegistryObject
+from pydantic import ValidationError
+import pytest
+
+from app.models import RegistryObject, SourceSpec
 from app.registry import DEFAULT_REGISTRY_ROOT, Registry
 
 
@@ -19,7 +22,22 @@ def test_seed_yaml_loads_and_validates() -> None:
     }
 
 
-def test_search_matches_names_descriptions_and_relationship_targets() -> None:
+def test_seed_records_have_truthful_catalog_sources() -> None:
+    registry = Registry(ROOT)
+    assert all(obj.source is not None for obj in registry.list_objects())
+    assert {obj.source.authority for obj in registry.list_objects() if obj.source} == {"catalog"}
+    assert {obj.source.refresh for obj in registry.list_objects() if obj.source} == {"manual"}
+    assert {obj.source.writeback for obj in registry.list_objects() if obj.source} == {"controlled"}
+
+
+def test_declared_interfaces_do_not_imply_live_availability() -> None:
+    registry = Registry(ROOT)
+    interfaces = [interface for obj in registry.list_objects() for interface in obj.interfaces]
+    assert interfaces
+    assert {interface.status for interface in interfaces} == {"declared"}
+
+
+def test_search_matches_names_descriptions_relationships_sources_and_interfaces() -> None:
     registry = Registry(ROOT)
     assert {obj.id for obj in registry.search_objects("root cause")} == {
         "skill.root-cause-analysis",
@@ -30,6 +48,9 @@ def test_search_matches_names_descriptions_and_relationship_targets() -> None:
         "agent.codex.mac",
         "machine.mac-mini",
     }
+    assert {obj.id for obj in registry.search_objects("cli://pi")} == {"agent.pi.mac"}
+    assert {obj.id for obj in registry.search_objects("bolt://neo4j")} == {"database.neo4j"}
+    assert "project.master-repo" in {obj.id for obj in registry.search_objects("github")}
 
 
 def test_filters_are_case_insensitive() -> None:
@@ -90,9 +111,20 @@ def test_duplicate_ids_are_reported(tmp_path: Path) -> None:
 def test_optional_fields_have_defaults() -> None:
     obj = RegistryObject(id="thing.example", kind="example", name="Example")
     assert obj.status == "active"
+    assert obj.source is None
+    assert obj.interfaces == []
     assert obj.capabilities == []
     assert obj.relationships == {}
     assert obj.metadata == {}
+
+
+def test_source_modes_are_bounded() -> None:
+    with pytest.raises(ValidationError):
+        SourceSpec(
+            type="service",
+            uri="service://example",
+            authority="mystery",
+        )
 
 
 def test_default_registry_root_preserves_source_checkout_behavior(monkeypatch) -> None:
