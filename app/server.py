@@ -12,6 +12,7 @@ if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
 from fastmcp import FastMCP
+from fastmcp.apps.generative import GenerativeUI
 from prefab_ui.app import PrefabApp
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -21,8 +22,13 @@ from app.ui import build_catalog_app
 
 mcp = FastMCP(
     "Environment Catalog",
-    instructions="A minimal YAML-backed catalog of agents, skills, policies, resources, machines, databases, projects, and playbooks.",
+    instructions=(
+        "A minimal YAML-backed catalog of agents, skills, policies, resources, machines, "
+        "databases, projects, and playbooks. Use the deterministic catalog app for known "
+        "registry browsing and Generative UI for open-ended visualizations."
+    ),
 )
+mcp.add_provider(GenerativeUI())
 
 
 def _objects_payload(objects: list[Any]) -> list[dict[str, Any]]:
