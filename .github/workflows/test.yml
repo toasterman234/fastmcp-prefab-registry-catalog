@@ -68,8 +68,6 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
-          cache: npm
-          cache-dependency-path: web/package.json
       - name: Install web shell
         run: npm install
       - name: Build web shell
