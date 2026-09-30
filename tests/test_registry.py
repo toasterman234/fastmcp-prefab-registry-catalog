@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from app.models import RegistryObject
-from app.registry import Registry
+from app.registry import DEFAULT_REGISTRY_ROOT, Registry
 
 
 ROOT = Path(__file__).resolve().parents[1] / "registry"
@@ -74,3 +74,62 @@ def test_optional_fields_have_defaults() -> None:
     assert obj.capabilities == []
     assert obj.relationships == {}
     assert obj.metadata == {}
+
+
+def test_default_registry_root_preserves_source_checkout_behavior(monkeypatch) -> None:
+    monkeypatch.delenv("REGISTRY_ROOT", raising=False)
+    registry = Registry()
+    assert registry.root == DEFAULT_REGISTRY_ROOT == ROOT
+    assert registry.validate_registry().valid
+    assert len(registry.list_objects()) == 16
+
+
+def test_registry_root_can_be_configured_from_environment(tmp_path: Path, monkeypatch) -> None:
+    (tmp_path / "custom.yaml").write_text(
+        "id: thing.custom\nkind: resource\nname: Custom\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("REGISTRY_ROOT", str(tmp_path))
+
+    registry = Registry()
+
+    assert registry.root == tmp_path
+    assert [obj.id for obj in registry.list_objects()] == ["thing.custom"]
+    assert registry.validate_registry().valid
+
+
+def test_explicit_registry_root_overrides_environment(
+    tmp_path: Path, monkeypatch
+) -> None:
+    environment_root = tmp_path / "environment"
+    explicit_root = tmp_path / "explicit"
+    environment_root.mkdir()
+    explicit_root.mkdir()
+    (environment_root / "env.yaml").write_text(
+        "id: thing.environment\nkind: resource\nname: Environment\n",
+        encoding="utf-8",
+    )
+    (explicit_root / "explicit.yaml").write_text(
+        "id: thing.explicit\nkind: resource\nname: Explicit\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("REGISTRY_ROOT", str(environment_root))
+
+    registry = Registry(explicit_root)
+
+    assert registry.root == explicit_root
+    assert [obj.id for obj in registry.list_objects()] == ["thing.explicit"]
+
+
+def test_missing_configured_registry_root_is_visible(tmp_path: Path, monkeypatch) -> None:
+    missing_root = tmp_path / "missing"
+    monkeypatch.setenv("REGISTRY_ROOT", str(missing_root))
+
+    report = Registry().validate_registry()
+
+    assert not report.valid
+    assert report.object_count == 0
+    assert any(
+        str(missing_root) in issue.message and "does not exist" in issue.message
+        for issue in report.issues
+    )

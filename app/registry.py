@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Iterable
 
@@ -9,13 +10,30 @@ from pydantic import ValidationError
 from app.models import RegistryObject, ValidationIssue, ValidationReport
 
 DEFAULT_REGISTRY_ROOT = Path(__file__).resolve().parents[1] / "registry"
+REGISTRY_ROOT_ENV = "REGISTRY_ROOT"
+
+
+def resolve_registry_root(root: str | Path | None = None) -> Path:
+    """Resolve the registry source root.
+
+    Precedence is explicit argument, REGISTRY_ROOT environment variable,
+    then the source-checkout development default.
+    """
+    if root is not None:
+        return Path(root).expanduser()
+
+    configured = os.getenv(REGISTRY_ROOT_ENV)
+    if configured:
+        return Path(configured).expanduser()
+
+    return DEFAULT_REGISTRY_ROOT
 
 
 class Registry:
     """Portable YAML-backed registry domain service, independent of FastMCP."""
 
-    def __init__(self, root: str | Path = DEFAULT_REGISTRY_ROOT):
-        self.root = Path(root)
+    def __init__(self, root: str | Path | None = None):
+        self.root = resolve_registry_root(root)
         self._objects: list[RegistryObject] = []
         self._load_errors: list[ValidationIssue] = []
         self.reload()
@@ -37,7 +55,7 @@ class Registry:
             if data is None:
                 return
             records = data if isinstance(data, list) else [data]
-            for index, record in enumerate(records):
+            for record in records:
                 if not isinstance(record, dict):
                     raise ValueError("record must be a YAML mapping")
                 self._objects.append(RegistryObject.model_validate(record))
