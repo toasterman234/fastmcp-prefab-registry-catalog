@@ -101,7 +101,17 @@ Build a minimal portable YAML-backed registry/catalog in Python with a domain re
 - [x] Mark runtime interfaces `available` or `unavailable` without mutating YAML
 - [x] Verify a real proxied MCP tool call
 - [x] Verify live federation in Prefab, `/api/catalog`, and workspace shell
-- **Status:** implemented and verified on `feat/stage7-mcp-federation`; pending PR merge
+- **Status:** merged in PR #12
+
+
+### Stage 8: mcp-use Inspector evaluation/integration
+- [ ] Run a compatibility spike against the current FastMCP server before changing code
+- [ ] Verify registry tools/resources, Prefab catalog app, Generative UI, skills, and federated MCP components
+- [ ] Record reconnect/error behavior and an unavailable-upstream case
+- [ ] Add only the smallest reproducible launch/integration wrapper if the spike passes
+- [ ] Classify generic workspace responsibilities as delegated to mcp-use vs retained in `web/`
+- [ ] Make an explicit adoption decision before removing or simplifying the existing workspace shell
+- **Status:** planned on `plan/mcp-use-inspector-integration`; implementation not started
 
 Next is files/docs/policies discovery. Controlled CRUD, broader live adapters, and JEv/scale features remain tracked in issue #1 and are intentionally not started.
 
@@ -114,6 +124,7 @@ Next is files/docs/policies discovery. Controlled CRUD, broader live adapters, a
 | 4 | Declared interfaces are descriptive until runtime-verified | Prevent catalog metadata from being mistaken for live connectivity |
 | 5 | Current seed YAML remains `authority: catalog` | The v0 registry is still the actual source of truth; live external authority is deferred |
 | 6 | Workspace shell is separate from Prefab | Navigation/layout should not depend on the FastMCP Apps development host; Prefab remains an app surface |
+| 7 | Evaluate mcp-use as a replaceable thin MCP host before integrating it | Generic MCP navigation/hosting should be delegated only if compatibility is proven; domain/catalog/federation authority stays in this repo |
 
 ## Errors Encountered
 | # | Attempts | Error | Resolution |
