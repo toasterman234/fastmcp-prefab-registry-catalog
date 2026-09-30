@@ -71,3 +71,13 @@
 - Artifacts, Runs, and Review deliberately show unbacked/empty states until authoritative models/providers exist.
 - Added a GitHub Actions web-shell build job.
 - Verification is not yet complete until the stacked PR head is read back green.
+
+
+### Stage 5: FastMCP Generative UI
+- Issue #9 records scope and acceptance.
+- Confirmed current FastMCP API: `from fastmcp.apps.generative import GenerativeUI`; provider registers `generate_prefab_ui`, `search_prefab_components`, and the streaming renderer.
+- Mounted `GenerativeUI()` without changing registry ownership or deterministic catalog behavior.
+- Added server discovery test for all existing registry tools plus both Generative UI tools.
+- Apps workspace now switches between Catalog app and Generative UI while preserving shell-owned navigation.
+- Added Chromium workspace verification that clicks Apps → Generative UI and asserts the iframe targets `tool=generate_prefab_ui` and exposes both provider tool names in the surface description.
+- CI result pending; stage remains unverified until read back green.
