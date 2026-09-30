@@ -127,14 +127,55 @@ function Catalog({ snapshot }: { snapshot: RegistrySnapshot }) {
 }
 
 function Apps({ appsUrl }: { appsUrl: string }) {
+  const [appSurface, setAppSurface] = useState<"catalog" | "generative">("catalog");
+  const appBase = appsUrl.includes("/launch?") ? appsUrl.split("/launch?")[0] : appsUrl.replace(/\/$/, "");
+  const currentUrl =
+    appSurface === "catalog"
+      ? `${appBase}/launch?tool=catalog`
+      : `${appBase}/launch?tool=generate_prefab_ui`;
+
   return (
     <section className="surface full-height">
       <div className="surface-header">
-        <div><h1>Apps</h1><p>Prefab and MCP App surfaces live here; they do not own workspace navigation.</p></div>
-        <a className="button" href={appsUrl} target="_blank" rel="noreferrer">Open separately</a>
+        <div>
+          <h1>Apps</h1>
+          <p>Deterministic Prefab apps and open-ended FastMCP Generative UI live here.</p>
+        </div>
+        <a className="button" href={currentUrl} target="_blank" rel="noreferrer">Open separately</a>
       </div>
+
+      <div className="app-tabs" role="tablist" aria-label="App surfaces">
+        <button
+          className={appSurface === "catalog" ? "app-tab active" : "app-tab"}
+          onClick={() => setAppSurface("catalog")}
+          role="tab"
+          aria-selected={appSurface === "catalog"}
+        >
+          Catalog app
+        </button>
+        <button
+          className={appSurface === "generative" ? "app-tab active" : "app-tab"}
+          onClick={() => setAppSurface("generative")}
+          role="tab"
+          aria-selected={appSurface === "generative"}
+        >
+          Generative UI
+        </button>
+      </div>
+
+      <div className="app-context">
+        {appSurface === "catalog"
+          ? "Known-shape registry browsing. This remains the deterministic Prefab surface."
+          : "FastMCP GenerativeUI provider. An agent can compose Prefab UI at runtime using generate_prefab_ui and search_prefab_components."}
+      </div>
+
       <div className="app-frame-wrap">
-        <iframe title="FastMCP app surface" src={appsUrl} className="app-frame" />
+        <iframe
+          key={currentUrl}
+          title={appSurface === "catalog" ? "Catalog Prefab app" : "FastMCP Generative UI"}
+          src={currentUrl}
+          className="app-frame"
+        />
       </div>
     </section>
   );
