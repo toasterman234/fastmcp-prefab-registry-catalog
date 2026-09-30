@@ -13,6 +13,7 @@ def main() -> None:
         browser = playwright.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
         page.goto(url, wait_until="networkidle")
+        page.get_by_text("MCP: 1/1 available", exact=False).wait_for(state="visible")
 
         page.get_by_test_id("nav-apps").click()
         page.get_by_test_id("app-surface-catalog").wait_for(state="visible")
@@ -28,12 +29,12 @@ def main() -> None:
         assert "generate_prefab_ui" in context
         assert "search_prefab_components" in context
 
-        screenshot = "/tmp/workspace-stage5.png"
+        screenshot = "/tmp/workspace-stage7.png"
         page.screenshot(path=screenshot, full_page=True)
         browser.close()
 
     print(
-        "WORKSPACE_VERIFY succeeded: Apps switcher rendered Catalog and Generative UI; "
+        "WORKSPACE_VERIFY succeeded: live MCP federation status plus Catalog/Generative UI Apps rendered; "
         f"generated UI iframe={src}; screenshot={screenshot}"
     )
 
