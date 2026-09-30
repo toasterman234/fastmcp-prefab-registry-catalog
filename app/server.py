@@ -13,6 +13,8 @@ if _PROJECT_ROOT not in sys.path:
 
 from fastmcp import FastMCP
 from prefab_ui.app import PrefabApp
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from app.registry import registry
 from app.ui import build_catalog_app
@@ -25,6 +27,14 @@ mcp = FastMCP(
 
 def _objects_payload(objects: list[Any]) -> list[dict[str, Any]]:
     return [obj.to_dict() for obj in objects]
+
+
+def _catalog_snapshot() -> dict[str, Any]:
+    return {
+        "objects": _objects_payload(registry.list_objects()),
+        "status_summary": _status_summary(),
+        "connected": True,
+    }
 
 
 def _status_summary() -> str:
@@ -75,6 +85,12 @@ def registry_incoming(object_id: str) -> dict[str, list[dict[str, Any]]]:
 def registry_validate() -> dict[str, Any]:
     """Validate YAML records, duplicate IDs, and relationship references."""
     return registry.validate_registry().to_dict()
+
+
+@mcp.custom_route("/api/catalog", methods=["GET"])
+async def catalog_http_projection(request: Request) -> JSONResponse:
+    """Read-only HTTP projection for the separate workspace shell."""
+    return JSONResponse(_catalog_snapshot())
 
 
 @mcp.resource("registry://objects/{object_id}", mime_type="application/json")

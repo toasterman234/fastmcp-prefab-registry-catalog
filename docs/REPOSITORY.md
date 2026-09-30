@@ -10,15 +10,15 @@ It is not a general platform, graph database, admin SaaS dashboard, workflow eng
 
 - Inspected related work before implementation. The existing `/Users/bencharney/my-catalog` project is a separate Node/EventCatalog/PDS projection and was not modified.
 - Verified current FastMCP Apps/Prefab documentation and installed package APIs.
-- Created a generic Pydantic model with sensible defaults and extensible extra fields.
+- Created a generic Pydantic model with sensible defaults, source/interface semantics, and extensible extra fields.
 - Implemented recursive YAML loading from a configurable registry root.
 - Registry-root precedence is explicit `Registry(root)`, `REGISTRY_ROOT`, then the source-checkout `registry/` fallback.
 - Kept registry YAML external to the Python distribution; setuptools explicitly packages `app` only.
 - Implemented list, get, search, kind/status filtering, outgoing relationship resolution, incoming/reverse relationship resolution, duplicate-ID checks, and broken-reference checks.
-- Added 16 seed/example records.
+- Added 16 seed/example records; each now records its catalog YAML source authority, and selected objects have explicitly declared (not live) interfaces.
 - Exposed FastMCP tools: `registry_search`, `registry_get`, `registry_list`, `registry_related`, `registry_incoming`, `registry_validate`, and `catalog`.
 - Exposed a complete registry resource and an individual object resource template.
-- Added a compact Prefab catalog with real kind/status filters, full-object search indexing, resolved machine display names, status badges, pagination, and expandable outgoing/incoming relationship details.
+- Added a compact Prefab catalog with real kind/status filters, full-object search indexing, source/interface metadata, resolved machine display names, status badges, pagination, and expandable outgoing/incoming relationship details.
 - Added unit tests plus a real-browser GitHub Actions job that launches `fastmcp dev apps` and verifies the rendered app in Chromium.
 
 ## Verification baseline
@@ -42,7 +42,13 @@ Stage 2 catalog UX work on `feat/stage2-catalog-ux` is verified by GitHub Action
 - browser verification passed kind filtering, status filtering, stable-ID/full-object search, and policy-view rendering
 - browser log receipt: `BROWSER_VERIFY succeeded: kind filter, status filter, full-object ID search, and policy view rendered`
 
-Do not treat a local-only test result or a successful write receipt as repository-wide verification; read back the branch/PR head checks.
+Stage 3 source/interface work on `feat/stage3-source-interface-model` is verified by GitHub Actions run `36652704412`:
+- 20 pytest tests passed
+- compile passed
+- browser verification passed source-URI and declared-interface search
+- all 16 seed records retain catalog authority; no declared interface is marked available
+
+Do not treat a declared interface as a live connection. Do not treat a local-only test result or a successful write receipt as repository-wide verification; read back the branch/PR head checks.
 
 ## Important compatibility note
 
@@ -62,6 +68,7 @@ The project-local FastMCP binary must be used. A globally resolved older FastMCP
 
 ## Current limitations
 
+- Source/interface metadata is descriptive; no live provider binding exists yet.
 - No editing or CRUD.
 - No SQLite or other persistence provider.
 - No discovery of files, MCP servers, machines, or live status.

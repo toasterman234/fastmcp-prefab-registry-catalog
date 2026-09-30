@@ -3,6 +3,20 @@
   name: filesystem
   description: Local filesystem access
   status: active
+  source:
+    type: registry-yaml
+    uri: registry://resources/resources.yaml#filesystem
+    authority: catalog
+    refresh: manual
+    writeback: controlled
+  interfaces:
+    - type: filesystem
+      uri: file:///
+      adapter: local-filesystem
+      status: declared
+      operations:
+        - read
+        - write
   capabilities:
     - read
     - write
@@ -16,6 +30,21 @@
   name: GitHub
   description: GitHub repositories and collaboration surface
   status: active
+  source:
+    type: registry-yaml
+    uri: registry://resources/resources.yaml#github
+    authority: catalog
+    refresh: manual
+    writeback: controlled
+  interfaces:
+    - type: mcp
+      uri: mcp://github
+      adapter: github
+      status: declared
+      operations:
+        - repositories
+        - issues
+        - pull-requests
   capabilities:
     - source-control
     - issues
@@ -29,6 +58,20 @@
   name: browser
   description: Browser for user-facing verification
   status: active
+  source:
+    type: registry-yaml
+    uri: registry://resources/resources.yaml#browser
+    authority: catalog
+    refresh: manual
+    writeback: controlled
+  interfaces:
+    - type: browser
+      uri: browser://default
+      adapter: playwright
+      status: declared
+      operations:
+        - navigate
+        - verify
   capabilities:
     - navigation
     - screenshots

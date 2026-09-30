@@ -23,7 +23,7 @@ app/server.py (FastMCP)
 Environment Catalog UI
 ```
 
-This project is intentionally local and narrow. It has no database, authentication, React/Next.js frontend, workers, agent runtime, or workflow engine.
+This project remains intentionally local and narrow. Stage 4 adds a small Next.js workspace shell under `web/`; it still has no database, production authentication, workers, agent runtime, or workflow engine.
 
 ## Catalog UI
 
@@ -32,8 +32,10 @@ The Prefab catalog currently supports:
 - kind filters
 - status filters
 - sorting and pagination
-- search across names, stable IDs, descriptions, capabilities, relationships, metadata, and host/location
+- search across names, stable IDs, descriptions, capabilities, sources, interfaces, relationships, metadata, and host/location
 - resolved machine display names
+- source authority / refresh / writeback metadata
+- declared interface metadata
 - expandable object details
 - resolved outgoing relationships
 - reverse/incoming relationships
@@ -94,6 +96,20 @@ description: Pi agent running on the Mac
 status: active
 location:
   machine: machine.mac-mini
+source:
+  type: registry-yaml
+  uri: registry://agents/pi.yaml
+  authority: catalog
+  refresh: manual
+  writeback: controlled
+interfaces:
+  - type: cli
+    uri: cli://pi
+    adapter: pi
+    status: declared
+    operations:
+      - inspect
+      - invoke
 capabilities:
   - filesystem
 relationships:
@@ -104,7 +120,14 @@ metadata:
   example: true
 ```
 
-`location` is optional. `capabilities`, `relationships`, and `metadata` default to empty values. The Pydantic model allows additional fields so a new kind can add narrow metadata without changing the registry architecture.
+`location`, `source`, and `interfaces` are optional. `capabilities`, `interfaces`, `relationships`, and `metadata` default to empty values where applicable.
+
+`source` records where the catalog truth currently comes from:
+- `authority`: `catalog`, `external`, or `derived`
+- `refresh`: `manual`, `on-read`, `event`, or `poll`
+- `writeback`: `none`, `controlled`, or `direct`
+
+An interface with `status: declared` is descriptive only. It must not be treated as a live connection until a later adapter/provider stage verifies it.
 
 ## Adding an object
 
@@ -129,4 +152,40 @@ The seed set includes Pi, Codex, Mac Mini, Zima, OVH, two skills, two policies, 
 
 ## Tests
 
-The test suite covers YAML loading, Pydantic defaults and validation, search, filters, outgoing/incoming relationship resolution, missing relationship references, duplicate IDs, registry-root configuration, and catalog UI construction. GitHub Actions additionally runs a real Chromium smoke verification for the rendered Prefab app.
+The test suite covers YAML loading, Pydantic defaults and source/interface validation, source/interface search, filters, outgoing/incoming relationship resolution, missing relationship references, duplicate IDs, registry-root configuration, and catalog UI construction. GitHub Actions additionally runs a real Chromium smoke verification for the rendered Prefab app.
+
+
+## Workspace shell
+
+The repository now separates the human workspace shell from Prefab app surfaces.
+
+```text
+FastMCP control/data layer
+   ├─ registry tools/resources
+   ├─ /api/catalog read-only projection
+   └─ Prefab/MCP Apps
+             ↓
+web/
+   ├─ Catalog
+   ├─ Inspector
+   ├─ Apps
+   ├─ Artifacts
+   ├─ Runs
+   └─ Review
+```
+
+Run FastMCP over HTTP for the shell catalog:
+
+```bash
+fastmcp run app/server.py --transport http --port 9000
+```
+
+Run the web shell:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+See [web/README.md](web/README.md) for the current development-host bridge and responsibility boundaries.

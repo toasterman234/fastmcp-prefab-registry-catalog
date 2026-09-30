@@ -39,3 +39,35 @@
   - browser assertions for kind filter, status filter, stable-ID/full-object search, and policy rendering
 - Browser receipt: `BROWSER_VERIFY succeeded: kind filter, status filter, full-object ID search, and policy view rendered; screenshot=/tmp/catalog-stage2.png`.
 - The screenshot is ephemeral CI output and is not claimed as a durable artifact.
+
+
+### Stage 3: source/interface model
+- Started as a stacked branch from verified PR #3 head `9ba4dcfd6af1bd1d66f58177eddab025fa8e7825` because PR #3 remained open.
+- Added optional `SourceSpec` with type, URI, authority, refresh mode, and writeback mode.
+- Added optional `InterfaceSpec` with interface type, URI, adapter, status, and operations.
+- Bounded source semantics to catalog/external/derived authority, manual/on-read/event/poll refresh, and none/controlled/direct writeback.
+- Bounded interface status to declared/available/unavailable.
+- Updated all 16 seed records with truthful `authority: catalog`, `refresh: manual`, and `writeback: controlled`.
+- Added representative declared interfaces for Pi, Codex, filesystem, GitHub, browser, Mac control plane, Neo4j, Memgraph, and master-repo. These remain descriptive and are not claimed live.
+- Source and interface fields now participate in both Python registry search and the Prefab hidden full-object search index.
+- Prefab detail rows now expose source authority/refresh/writeback plus declared interfaces and operations.
+- GitHub Actions run `36652704412` on commit `e97dcdce9c690141caeea960e6dd4cdb7c6f47b3` passed:
+  - 20 pytest tests
+  - Python compilation
+  - Chromium installation
+  - FastMCP Apps preview startup
+  - browser search by stable ID, `cli://pi`, and `registry://agents/pi.yaml`
+- Browser receipt: `BROWSER_VERIFY succeeded: kind/status filters, ID search, source search, declared-interface search, and policy view rendered; screenshot=/tmp/catalog-stage3.png`.
+- Stage 4 is intentionally not started.
+
+
+### Stage 4: workspace shell separation
+- Issue #5 records the decision and acceptance criteria.
+- Started from verified PR #4 head `970c4a7400ea95c347ba71f828730d57ab36dfad`; this branch is intentionally downstream of PR #4.
+- Added `web/` as a separate Next.js workspace shell rather than modifying the FastMCP Apps development picker.
+- Added Catalog, object inspector, Apps, Artifacts, Runs, and Review destinations.
+- Catalog data is fetched from a read-only `/api/catalog` FastMCP custom route; the web shell does not read YAML directly and has no independent store.
+- The Apps surface embeds the existing configurable Prefab/FastMCP Apps URL as a transitional development bridge.
+- Artifacts, Runs, and Review deliberately show unbacked/empty states until authoritative models/providers exist.
+- Added a GitHub Actions web-shell build job.
+- Verification is not yet complete until the stacked PR head is read back green.

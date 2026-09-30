@@ -55,11 +55,31 @@ Build a minimal portable YAML-backed registry/catalog in Python with a domain re
 - **Status:** implemented and verified on `feat/stage2-catalog-ux`; pending merge
 
 ### Stage 3: Source/interface model
-- [ ] Add small generic source/interface metadata
-- [ ] Define authority and refresh/sync semantics
+- [x] Add small generic source/interface metadata
+- [x] Define authority, refresh, and writeback semantics
+- [x] Add declared interface status/operations
+- [x] Project source/interfaces into search and Prefab details
+- [x] Verify source/interface discovery in Chromium
+- **Status:** implemented and verified on `feat/stage3-source-interface-model`; stacked on PR #3 and pending merge
+
+### Stage 4: Workspace shell separation — issue #5
+- [x] Add a separate Next.js workspace shell
+- [x] Keep YAML/domain state out of the shell
+- [x] Add read-only FastMCP HTTP catalog projection
+- [x] Add Catalog + inspector surface
+- [x] Add an Apps surface for the existing Prefab host
+- [x] Add explicit Artifacts, Runs, and Review destinations without fake backing models
+- [x] Add web build to CI
+- [ ] Read back CI green for the stacked PR
+- **Status:** implementation in progress on `feat/stage4-workspace-shell`; stacked on PR #4
+
+### Stage 5: Real skill discovery
+- [ ] Discover real SKILL.md directories through FastMCP's skills provider
+- [ ] Preserve stable IDs and source authority
+- [ ] Distinguish declared from runtime-available interfaces
 - **Status:** not started
 
-Later stages (skills discovery, MCP federation, files/docs discovery, controlled CRUD, live adapters, JEv/scale features) remain tracked in issue #1 and are intentionally not started.
+Later stages after skill discovery (MCP federation, files/docs discovery, controlled CRUD, live adapters, JEv/scale features) remain tracked in issue #1 and are intentionally not started.
 
 ## Decisions Made
 | # | Decision | Rationale |
@@ -67,6 +87,9 @@ Later stages (skills discovery, MCP federation, files/docs discovery, controlled
 | 1 | New project lives at `fastmcp-prefab-registry-catalog` | User selected isolated directory rather than existing EventCatalog project |
 | 2 | YAML remains the durable source of truth | Explicit v0 architecture constraint |
 | 3 | UI behavior is browser-verified in target-repo CI | Prevent UI completion claims from depending on static component construction or the currently quota-degraded external Mac artifact path |
+| 4 | Declared interfaces are descriptive until runtime-verified | Prevent catalog metadata from being mistaken for live connectivity |
+| 5 | Current seed YAML remains `authority: catalog` | The v0 registry is still the actual source of truth; live external authority is deferred |
+| 6 | Workspace shell is separate from Prefab | Navigation/layout should not depend on the FastMCP Apps development host; Prefab remains an app surface |
 
 ## Errors Encountered
 | # | Attempts | Error | Resolution |

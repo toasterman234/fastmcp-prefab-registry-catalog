@@ -19,7 +19,7 @@ from prefab_ui.components import (
     Text,
 )
 
-from app.models import RegistryObject
+from app.models import InterfaceSpec, RegistryObject
 
 IncomingRelationships = dict[str, dict[str, list[RegistryObject]]]
 
@@ -56,6 +56,20 @@ def _location(obj: RegistryObject, objects_by_id: dict[str, RegistryObject]) -> 
     return machine.name if machine else machine_id
 
 
+def _source_label(obj: RegistryObject) -> str:
+    if not obj.source:
+        return "-"
+    return f"{obj.source.type} · {obj.source.authority}"
+
+
+def _interface_label(interface: InterfaceSpec) -> str:
+    parts = [interface.type]
+    if interface.adapter:
+        parts.append(interface.adapter)
+    parts.append(interface.status)
+    return " · ".join(parts)
+
+
 def _display_object(obj: RegistryObject) -> str:
     return f"{obj.name} ({obj.id})"
 
@@ -79,6 +93,30 @@ def _search_blob(
         for source in sources:
             incoming_parts.extend([source.id, source.name])
 
+    source_parts: list[str] = []
+    if obj.source:
+        source_parts.extend(
+            [
+                obj.source.type,
+                obj.source.uri,
+                obj.source.authority,
+                obj.source.refresh,
+                obj.source.writeback,
+            ]
+        )
+
+    interface_parts: list[str] = []
+    for interface in obj.interfaces:
+        interface_parts.extend(
+            [
+                interface.type,
+                interface.uri or "",
+                interface.adapter or "",
+                interface.status,
+                *interface.operations,
+            ]
+        )
+
     values = [
         obj.id,
         obj.kind,
@@ -89,6 +127,8 @@ def _search_blob(
         *obj.capabilities,
         *outgoing_parts,
         *incoming_parts,
+        *source_parts,
+        *interface_parts,
         json.dumps(obj.metadata, sort_keys=True, default=str),
     ]
     return " ".join(value for value in values if value).casefold()
@@ -117,6 +157,25 @@ def _detail_view(
         for source in sources
     ]
 
+    source_lines = ["None"]
+    if obj.source:
+        source_lines = [
+            f"Type: {obj.source.type}",
+            f"URI: {obj.source.uri}",
+            f"Authority: {obj.source.authority}",
+            f"Refresh: {obj.source.refresh}",
+            f"Writeback: {obj.source.writeback}",
+        ]
+
+    interface_lines = [
+        (
+            f"{_interface_label(interface)}"
+            + (f" · {interface.uri}" if interface.uri else "")
+            + (f" · operations: {', '.join(interface.operations)}" if interface.operations else "")
+        )
+        for interface in obj.interfaces
+    ] or ["None"]
+
     return Column(
         gap=2,
         css_class="p-3 text-sm bg-muted/30 rounded-md",
@@ -140,6 +199,11 @@ def _detail_view(
                 f"Host / location: {_location(obj, objects_by_id)}",
                 css_class="text-muted-foreground",
             ),
+            Separator(),
+            Text("Source", css_class="font-medium"),
+            *[Text(line) for line in source_lines],
+            Text("Declared interfaces", css_class="font-medium pt-1"),
+            *[Text(line) for line in interface_lines],
             Separator(),
             Text("Outgoing relationships", css_class="font-medium"),
             *[Text(line) for line in (outgoing_lines + unresolved_outgoing or ["None"])],
@@ -169,6 +233,7 @@ def _catalog_table(
             "status": Badge(obj.status, variant=_status_variant(obj.status)),
             "description": obj.description,
             "capabilities": ", ".join(obj.capabilities) or "-",
+            "source": _source_label(obj),
             "location": _location(obj, objects_by_id),
             "_search": _search_blob(obj, objects_by_id, incoming),
         }
@@ -186,11 +251,18 @@ def _catalog_table(
             DataTableColumn(key="status", header="Status", sortable=True),
             DataTableColumn(key="description", header="Description", sortable=True),
             DataTableColumn(
-                key="capabilities",
-                header="Capabilities",
+                key="source",
+                header="Source",
                 sortable=True,
                 header_class="hidden lg:table-cell",
                 cell_class="hidden lg:table-cell",
+            ),
+            DataTableColumn(
+                key="capabilities",
+                header="Capabilities",
+                sortable=True,
+                header_class="hidden xl:table-cell",
+                cell_class="hidden xl:table-cell",
             ),
             DataTableColumn(
                 key="location",
@@ -289,11 +361,11 @@ def build_catalog_app(
                 Text("YAML-backed registry", css_class="text-sm text-muted-foreground")
             Separator()
             Text(
-                "Filter by kind, then status. Expand a row for resolved outgoing and incoming relationships.",
+                "Filter by kind, then status. Expand a row for source, declared interfaces, and resolved relationships.",
                 css_class="text-sm text-muted-foreground",
             )
             Text(
-                "Search within the selected filters covers names, IDs, descriptions, capabilities, relationships, metadata, and host/location.",
+                "Search covers names, IDs, descriptions, capabilities, sources, interfaces, relationships, metadata, and host/location.",
                 css_class="text-sm text-muted-foreground",
             )
             Tabs(

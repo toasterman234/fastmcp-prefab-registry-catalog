@@ -3,6 +3,19 @@
   name: Neo4j
   description: Graph database used by selected environment projects
   status: active
+  source:
+    type: registry-yaml
+    uri: registry://databases/databases.yaml#neo4j
+    authority: catalog
+    refresh: manual
+    writeback: controlled
+  interfaces:
+    - type: bolt
+      uri: bolt://neo4j
+      adapter: neo4j
+      status: declared
+      operations:
+        - query
   capabilities:
     - graph
     - cypher
@@ -16,6 +29,19 @@
   name: Memgraph
   description: Graph database for exploratory graph workloads
   status: active
+  source:
+    type: registry-yaml
+    uri: registry://databases/databases.yaml#memgraph
+    authority: catalog
+    refresh: manual
+    writeback: controlled
+  interfaces:
+    - type: bolt
+      uri: bolt://memgraph
+      adapter: memgraph
+      status: declared
+      operations:
+        - query
   capabilities:
     - graph
     - cypher
