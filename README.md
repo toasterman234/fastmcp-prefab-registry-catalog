@@ -48,6 +48,25 @@ env PATH="$PWD/.venv/bin:$PATH" .venv/bin/fastmcp dev inspector app/server.py
 
 The `app/server.py` module is importable as a normal Python module for tests and registry use.
 
+## Registry root configuration
+
+The YAML registry remains external durable data rather than Python package data.
+
+Registry-root precedence is:
+
+1. an explicit root passed to `Registry(root)`
+2. the `REGISTRY_ROOT` environment variable
+3. the repository's `registry/` directory as the source-checkout development fallback
+
+For a portable installation, point the service at the authoritative catalog explicitly:
+
+```bash
+export REGISTRY_ROOT=/path/to/environment-registry
+fastmcp run app/server.py
+```
+
+If a configured registry root does not exist, registry validation reports an error rather than silently falling back to another source.
+
 ## Schema
 
 Every object uses the common fields:
@@ -74,7 +93,7 @@ metadata:
 
 ## Adding an object
 
-1. Add a YAML file below the matching `registry/<kind>/` directory.
+1. Add a YAML file below the matching `registry/<kind>/` directory, or below the configured `REGISTRY_ROOT`.
 2. Use a globally unique `id`.
 3. Set `metadata.seed: true` and `metadata.example: true` for replaceable examples.
 4. Use relationship target IDs, not display names.
@@ -95,4 +114,4 @@ The seed set includes Pi, Codex, Mac Mini, Zima, OVH, two skills, two policies, 
 
 ## Tests
 
-The test suite covers YAML loading, Pydantic defaults and validation, search, filters, relationship resolution, missing relationship references, and duplicate IDs.
+The test suite covers YAML loading, Pydantic defaults and validation, search, filters, relationship resolution, missing relationship references, duplicate IDs, and registry-root configuration.

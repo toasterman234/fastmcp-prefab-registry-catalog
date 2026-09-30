@@ -4,11 +4,19 @@
 
 ### YAML registry
 
-`registry/` is the durable v0 source of truth. Files are organized by object kind for readability. YAML is plain, portable, reviewable, and easy to replace with real inventory records later.
+`registry/` is the durable v0 source of truth in a source checkout. Files are organized by object kind for readability. YAML is plain, portable, reviewable, and easy to replace with real inventory records later.
+
+The registry source is intentionally external to the Python package. Runtime root selection is:
+
+1. explicit `Registry(root)`
+2. `REGISTRY_ROOT`
+3. the repository `registry/` development fallback
+
+A configured but missing root is a validation error; the application does not silently switch authorities.
 
 ### Python registry library
 
-`app/models.py` defines the small generic Pydantic schema. `app/registry.py` loads YAML and owns list, get, search, filter, relationship resolution, and validation operations. It does not import FastMCP or Prefab and can be used from ordinary Python code.
+`app/models.py` defines the small generic Pydantic schema. `app/registry.py` resolves the registry root, loads YAML, and owns list, get, search, filter, relationship resolution, and validation operations. It does not import FastMCP or Prefab and can be used from ordinary Python code.
 
 ### FastMCP
 
@@ -21,7 +29,7 @@
 ## Data flow
 
 ```text
-YAML registry
+Configured YAML registry root
       ↓
 Python registry library
       ↓
@@ -32,6 +40,10 @@ FastMCP
       ↓
 Catalog UI
 ```
+
+## Packaging boundary
+
+The Python distribution packages `app` only. Registry YAML is operational/domain data and is not implicitly bundled into the wheel. Portable deployments should set `REGISTRY_ROOT` to the authoritative catalog location.
 
 ## Deliberate v0 constraints
 
