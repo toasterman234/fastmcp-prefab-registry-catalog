@@ -136,3 +136,22 @@ Responsibility boundary:
 - YAML remains authoritative; the shell never reads or writes registry YAML directly
 
 The current Apps embedding URL is a development bridge to `fastmcp dev apps`, not a claim of a production MCP Apps host. Artifacts, Runs, and Review are visible shell destinations but remain intentionally unbacked until authoritative models/providers exist.
+
+
+## Generative UI boundary
+
+FastMCP's native `GenerativeUI` provider is mounted beside the deterministic catalog app:
+
+```text
+FastMCP
+ ├─ registry tools/resources
+ ├─ catalog() → deterministic Prefab app
+ └─ GenerativeUI
+      ├─ generate_prefab_ui
+      ├─ search_prefab_components
+      └─ streaming ui:// renderer
+             ↓
+        Workspace / Apps
+```
+
+Generative UI is intentionally presentation/runtime output. It does not mutate registry authority, create durable artifacts, or replace the workspace shell. Persistence and promotion of a generated UI would require a separate explicit artifact lifecycle.
