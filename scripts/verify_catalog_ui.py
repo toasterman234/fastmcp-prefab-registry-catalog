@@ -68,11 +68,8 @@ def main() -> int:
         assert_not_visible(app, "Codex")
 
         search.fill("")
-        policies_tab = app.get_by_role("tab", name="Policys (2)")
-        if policies_tab.count() == 0:
-            # Keep the verification resilient if the UI pluralization is improved.
-            policies_tab = app.get_by_role("tab", name="Policies (2)")
-        policies_tab.first.click()
+        policies_tab = app.get_by_role("tab", name="Policies (2)")
+        policies_tab.click()
         assert_visible(app, "Browser Verification Required")
         assert_visible(app, "Evidence Before Completion")
 
