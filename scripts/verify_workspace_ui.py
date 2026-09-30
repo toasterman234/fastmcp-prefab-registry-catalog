@@ -14,9 +14,9 @@ def main() -> None:
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
         page.goto(url, wait_until="networkidle")
 
-        page.get_by_role("button", name="Apps").click()
-        page.get_by_role("button", name="Catalog app").wait_for()
-        gen = page.get_by_role("button", name="Generative UI")
+        page.get_by_test_id("nav-apps").click()
+        page.get_by_test_id("app-surface-catalog").wait_for(state="visible")
+        gen = page.get_by_test_id("app-surface-generative")
         gen.click()
 
         frame = page.locator('iframe[title="FastMCP Generative UI"]')
