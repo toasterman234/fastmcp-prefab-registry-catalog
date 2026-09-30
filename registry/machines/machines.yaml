@@ -3,6 +3,20 @@
   name: Mac Mini
   description: Primary Mac Mini development machine
   status: active
+  source:
+    type: registry-yaml
+    uri: registry://machines/machines.yaml#mac-mini
+    authority: catalog
+    refresh: manual
+    writeback: controlled
+  interfaces:
+    - type: control-plane
+      uri: github://toasterman234/github-workflows-control-plane
+      adapter: governed-mac-request
+      status: declared
+      operations:
+        - inspect
+        - execute-governed
   capabilities:
     - macos
     - local-development
@@ -16,6 +30,12 @@
   name: Zima
   description: Zima home lab machine
   status: active
+  source:
+    type: registry-yaml
+    uri: registry://machines/machines.yaml#zima
+    authority: catalog
+    refresh: manual
+    writeback: controlled
   capabilities:
     - homelab
   relationships: {}
@@ -28,6 +48,12 @@
   name: OVH
   description: OVH VPS environment
   status: active
+  source:
+    type: registry-yaml
+    uri: registry://machines/machines.yaml#ovh
+    authority: catalog
+    refresh: manual
+    writeback: controlled
   capabilities:
     - linux
     - hosted

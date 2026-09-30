@@ -3,6 +3,12 @@
   name: Root Cause Analysis
   description: Diagnose failures by tracing evidence to the underlying cause
   status: active
+  source:
+    type: registry-yaml
+    uri: registry://skills/skills.yaml#root-cause-analysis
+    authority: catalog
+    refresh: manual
+    writeback: controlled
   capabilities:
     - diagnosis
     - debugging
@@ -16,6 +22,12 @@
   name: Browser Verification
   description: Verify user-facing behavior in a real browser before claiming completion
   status: active
+  source:
+    type: registry-yaml
+    uri: registry://skills/skills.yaml#browser-verification
+    authority: catalog
+    refresh: manual
+    writeback: controlled
   capabilities:
     - browser
     - verification

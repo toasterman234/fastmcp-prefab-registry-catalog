@@ -3,6 +3,21 @@ kind: project
 name: master-repo
 description: Shared repository for environment governance and tooling
 status: active
+source:
+  type: registry-yaml
+  uri: registry://projects/projects.yaml#master-repo
+  authority: catalog
+  refresh: manual
+  writeback: controlled
+interfaces:
+  - type: github
+    uri: github://toasterman234/master-repo
+    adapter: github
+    status: declared
+    operations:
+      - read
+      - issues
+      - pull-requests
 capabilities:
   - source-control
   - governance

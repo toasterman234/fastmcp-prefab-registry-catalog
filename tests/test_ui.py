@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from app.registry import Registry
-from app.ui import _kind_plural, _location, _search_blob, build_catalog_app
+from app.ui import _kind_plural, _location, _search_blob, _source_label, build_catalog_app
 
 
 ROOT = Path(__file__).resolve().parents[1] / "registry"
@@ -28,7 +28,15 @@ def test_search_blob_includes_nonvisible_registry_fields() -> None:
     assert "browser verification required" in blob
     assert "policy.browser-verification-required" in blob
     assert "mac mini" in blob
+    assert "registry://agents/pi.yaml" in blob
+    assert "cli://pi" in blob
+    assert "controlled" in blob
     assert "example" in blob
+
+
+def test_source_label_is_compact_and_explicit() -> None:
+    _, _, by_id, _ = _fixture()
+    assert _source_label(by_id["agent.pi.mac"]) == "registry-yaml · catalog"
 
 
 def test_kind_pluralization_is_human_readable() -> None:
@@ -42,7 +50,7 @@ def test_location_resolves_machine_display_name() -> None:
     assert _location(by_id["agent.pi.mac"], by_id) == "Mac Mini"
 
 
-def test_catalog_app_builds_with_kind_status_and_incoming_data() -> None:
+def test_catalog_app_builds_with_kind_status_source_and_incoming_data() -> None:
     _, objects, _, incoming = _fixture()
     app = build_catalog_app(objects, "active: 16", incoming)
     assert app is not None

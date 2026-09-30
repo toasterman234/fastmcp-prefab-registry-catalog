@@ -10,7 +10,7 @@ from playwright.sync_api import Frame, Page, sync_playwright
 
 DEV_PORT = int(os.environ.get("CATALOG_DEV_PORT", "9090"))
 BASE_URL = f"http://127.0.0.1:{DEV_PORT}"
-SCREENSHOT = Path(os.environ.get("CATALOG_SCREENSHOT", "/tmp/catalog-stage2.png"))
+SCREENSHOT = Path(os.environ.get("CATALOG_SCREENSHOT", "/tmp/catalog-stage3.png"))
 
 
 def find_app_frame(page: Page, timeout_seconds: float = 30.0) -> Frame:
@@ -63,7 +63,16 @@ def main() -> int:
         search = app.locator("input:visible").first
         if search.count() == 0:
             raise AssertionError("Expected a visible DataTable search input")
+
         search.fill("agent.pi.mac")
+        assert_visible(app, "Pi")
+        assert_not_visible(app, "Codex")
+
+        search.fill("cli://pi")
+        assert_visible(app, "Pi")
+        assert_not_visible(app, "Codex")
+
+        search.fill("registry://agents/pi.yaml")
         assert_visible(app, "Pi")
         assert_not_visible(app, "Codex")
 
@@ -76,8 +85,8 @@ def main() -> int:
         SCREENSHOT.parent.mkdir(parents=True, exist_ok=True)
         page.screenshot(path=str(SCREENSHOT), full_page=True)
         print(
-            "BROWSER_VERIFY succeeded: kind filter, status filter, full-object ID search, "
-            f"and policy view rendered; screenshot={SCREENSHOT}"
+            "BROWSER_VERIFY succeeded: kind/status filters, ID search, source search, "
+            f"declared-interface search, and policy view rendered; screenshot={SCREENSHOT}"
         )
         browser.close()
     return 0
