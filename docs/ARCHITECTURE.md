@@ -155,3 +155,21 @@ FastMCP
 ```
 
 Generative UI is intentionally presentation/runtime output. It does not mutate registry authority, create durable artifacts, or replace the workspace shell. Persistence and promotion of a generated UI would require a separate explicit artifact lifecycle.
+
+## Runtime catalog projection and real skills
+
+Stage 6 introduces a read-only merged view rather than mutating the YAML registry:
+
+```text
+YAML registry -----------------+
+                              +--> CatalogView --> tools/resources/API/Prefab/shell
+FastMCP runtime projections ---+
+```
+
+`app/registry.py` remains the durable YAML loader/domain service. `app/catalog.py` performs ID-based overlays. Provider-specific discovery stays outside the durable registry.
+
+When `SKILLS_ROOTS` is configured, `SkillsDirectoryProvider(reload=True)` exposes `skill://<name>/SKILL.md`, `skill://<name>/_manifest`, and supporting files through a resource template. Discovered skills are projected with stable IDs of `skill.<directory-name>`.
+
+A successful provider discovery is runtime evidence for an `available` `mcp-resource` interface. Matching YAML skills retain catalog capabilities and relationships while the discovered directory becomes the external content source.
+
+This path is read-only and coexists with `GenerativeUI()`. FastMCP 4.0.10 exposes directory-backed skills through ordinary MCP resources; this application does not claim the separate standardized Skills protocol extension.

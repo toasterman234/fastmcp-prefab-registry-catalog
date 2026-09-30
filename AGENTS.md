@@ -13,7 +13,8 @@ This repository is a minimal local registry/catalog built with Python, FastMCP, 
 - Current seed count is 16 records across 8 kinds.
 - The Python distribution packages `app` only; registry YAML is intentionally external operational data.
 - The catalog UI has real kind/status filters, full-object search indexing, resolved host names, source metadata, declared interfaces, and expandable outgoing/incoming relationships.
-- Every current seed record declares its YAML catalog source as authoritative today; interface entries use `status: declared` unless a later live-adapter stage verifies availability.
+- Every seed record declares its YAML catalog source as authoritative by default. Runtime-discovered skills may overlay matching skill records with `authority: external` and an `available` MCP resource interface after FastMCP discovery succeeds.
+- `SKILLS_ROOTS` enables real directory-backed skill discovery. No configured roots means no runtime skill projection.
 - CI includes a real Chromium smoke check against the rendered FastMCP Prefab app.
 
 ## Architecture invariant
@@ -32,11 +33,14 @@ Do not move YAML loading into FastMCP handlers, do not make Prefab the data stor
 |---|---|
 | `registry/<kind>/*.yaml` | Development/default durable records grouped by kind |
 | `app/models.py` | Generic Pydantic schema, source/interface semantics, and validation report models |
-| `app/registry.py` | Root resolution, load, list, get, search, filter, outgoing/incoming relationships, validation |
+| `app/registry.py` | Durable YAML registry loading and validation |
+| `app/catalog.py` | Read-only merged catalog view over durable records plus runtime projections |
+| `app/skill_discovery.py` | FastMCP skill-root configuration, provider creation, and runtime skill projection |
 | `app/server.py` | FastMCP server, tools, resources, `catalog()` |
 | `app/ui.py` | Prefab catalog composition |
 | `tests/test_registry.py` | Registry behavior, relationship direction, and registry-root tests |
 | `tests/test_ui.py` | UI helper/catalog-construction tests |
+| `tests/test_skills.py` | Real `SkillsDirectoryProvider` resource/projection tests |
 | `scripts/verify_catalog_ui.py` | Playwright browser verification against `fastmcp dev apps` |
 | `docs/ARCHITECTURE.md` | Responsibility boundaries and data flow |
 | `docs/NEXT.md` | Explicitly deferred extensions |
@@ -97,11 +101,19 @@ Verify:
 
 1. `python -m pip install -e '.[test]'` succeeds in a clean environment.
 2. `.venv/bin/python -m pytest -q`
-3. MCP discovery finds the seven expected tools and registry resources.
+3. MCP discovery finds the ten expected registry/skill/Generative UI tools; with `SKILLS_ROOTS` configured, it also exposes discovered `skill://` resources.
 4. `registry_validate` reports valid YAML, no duplicate IDs, and no broken relationship references.
-5. UI changes pass the real-browser job in `.github/workflows/test.yml`.
+5. UI/provider changes pass the real-browser job, workspace Apps check, HTTP catalog projection check, and skill-resource check in `.github/workflows/test.yml`.
 6. GitHub Actions is read back green for the branch/PR head being claimed.
 
 ## Intentional non-goals
 
 Do not implement the items in `docs/NEXT.md` unless the task explicitly scopes one of them.
+
+## Skill discovery
+
+```bash
+export SKILLS_ROOTS="/path/to/skills:/another/path/to/skills"
+```
+
+Use the platform path separator (`:` on macOS/Linux). Each root contains immediate child skill directories with `SKILL.md`. Do not mark an interface `available` merely because it is configured; the skill projection does so only after the provider discovers the skill.

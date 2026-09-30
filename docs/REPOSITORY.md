@@ -16,8 +16,9 @@ It is not a general platform, graph database, admin SaaS dashboard, workflow eng
 - Kept registry YAML external to the Python distribution; setuptools explicitly packages `app` only.
 - Implemented list, get, search, kind/status filtering, outgoing relationship resolution, incoming/reverse relationship resolution, duplicate-ID checks, and broken-reference checks.
 - Added 16 seed/example records; each now records its catalog YAML source authority, and selected objects have explicitly declared (not live) interfaces.
-- Exposed FastMCP tools: `registry_search`, `registry_get`, `registry_list`, `registry_related`, `registry_incoming`, `registry_validate`, and `catalog`.
-- Exposed a complete registry resource and an individual object resource template.
+- Exposed FastMCP tools for registry operations plus `skill_discovery_status`, deterministic `catalog`, and the native Generative UI provider tools.
+- Exposed a complete merged-catalog resource and an individual object resource template.
+- Added optional `SKILLS_ROOTS` discovery through FastMCP `SkillsDirectoryProvider`; discovered `SKILL.md` files and manifests become real MCP resources and runtime catalog objects.
 - Added a compact Prefab catalog with real kind/status filters, full-object search indexing, source/interface metadata, resolved machine display names, status badges, pagination, and expandable outgoing/incoming relationship details.
 - Added unit tests plus a real-browser GitHub Actions job that launches `fastmcp dev apps` and verifies the rendered app in Chromium.
 
@@ -68,7 +69,7 @@ The project-local FastMCP binary must be used. A globally resolved older FastMCP
 
 ## Current limitations
 
-- Source/interface metadata is descriptive; no live provider binding exists yet.
+- Live provider binding exists for configured directory-backed skills; other source/interface entries remain descriptive.
 - No editing or CRUD.
 - No SQLite or other persistence provider.
 - No discovery of files, MCP servers, machines, or live status.
@@ -76,3 +77,15 @@ The project-local FastMCP binary must be used. A globally resolved older FastMCP
 - No JEv routing.
 - No graph visualization.
 - No authentication.
+
+## Real skill discovery verification
+
+Stage 6 verification covers:
+- real directory-backed `SKILL.md` fixtures;
+- stable runtime catalog IDs and overlay behavior;
+- actual `skill://.../SKILL.md` and manifest resources over FastMCP HTTP;
+- runtime projection through `/api/catalog`;
+- rendered Prefab catalog behavior;
+- coexistence with the existing Generative UI workspace surface.
+
+A discovered skill's `mcp-resource` interface is marked `available` only after provider discovery in the running process. The separate standardized Skills protocol extension is not enabled here.

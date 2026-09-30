@@ -28,4 +28,16 @@ export type RegistrySnapshot = {
   status_summary: string;
   connected?: boolean;
   error?: string;
+  discovery?: {
+    skills?: {
+      enabled?: boolean;
+      provider?: string | null;
+      roots?: string[];
+      missing_roots?: string[];
+      discovered_count?: number;
+      discovered_ids?: string[];
+      refresh?: string | null;
+      protocol_surface?: string | null;
+    };
+  };
 };

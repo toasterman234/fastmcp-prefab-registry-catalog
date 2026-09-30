@@ -1,53 +1,42 @@
 # Next extensions
 
-The registry now has a read-only YAML catalog, FastMCP exposure, a Prefab viewer, real catalog filters/search, reverse relationships, and optional source/interface metadata.
+The repository now has a YAML-backed durable catalog, source/interface semantics, a separate workspace shell, deterministic Prefab apps, native FastMCP Generative UI, and configurable real directory-backed skill discovery.
 
 ## Completed foundations
 
 - configurable external registry root
-- real kind/status filtering
-- full-object catalog search
-- outgoing and incoming relationship views
+- kind/status filtering and full-object search
+- outgoing/incoming relationship views
 - source authority / refresh / writeback metadata
-- declared interface metadata
-- browser verification in CI
+- declared-versus-available interfaces
+- separate workspace shell and read-only `/api/catalog` projection
+- native FastMCP Generative UI inside Apps
+- real `SKILL.md` discovery through `SkillsDirectoryProvider`
+- runtime skill projection with stable IDs
+- browser, HTTP-resource, API-projection, and web-build verification
 
-## Next: stage 4 — real skill discovery
+## Next: MCP federation
 
-The next narrow increment should replace descriptive skill records with discovery from real skill directories where available.
+The next narrow increment should register/proxy real MCP servers and attach their tools/resources/prompts to catalog entities.
 
-Candidate shape:
-
-```text
-SKILL.md directories
-      ↓
-FastMCP SkillsDirectoryProvider
-      ↓
-discovered skills/resources
-      ↓
-catalog projection
-```
-
-Requirements before marking any discovered source/interface as live:
-
-- retain stable catalog IDs
-- preserve explicit source authority
-- do not silently overwrite catalog-controlled fields
-- distinguish discovered/available from merely declared
-- provide refresh/read-back evidence
-- keep the provider optional and replaceable
+Requirements:
+- preserve the current catalog identity model
+- use source/interface metadata rather than inventing a second registry
+- distinguish configured endpoints from runtime-reachable endpoints
+- namespace or otherwise prevent component collisions
+- expose connection/read-back evidence
+- keep backend servers independently replaceable
 
 ## Later independent stages
 
-- MCP server discovery/federation
 - arbitrary filesystem/docs/policies discovery
 - editing/CRUD
 - controlled refresh/writeback
-- SQLite or another persistence provider if YAML becomes limiting
+- optional SQLite or other persistence only if YAML becomes limiting
 - live machine status
 - agent invocation
 - policy evaluation
 - JEv search/routing
 - graph/relationship visualization
 
-These are not prerequisites for the current registry and should not be added as hidden infrastructure. Each requires an explicit architecture decision and verification plan before implementation.
+Each later increment should remain independently scoped and verified.

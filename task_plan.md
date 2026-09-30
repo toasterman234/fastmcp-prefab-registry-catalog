@@ -52,7 +52,7 @@ Build a minimal portable YAML-backed registry/catalog in Python with a domain re
 - [x] Resolve machine display names
 - [x] Add reverse/incoming relationships
 - [x] Add a real Chromium browser smoke test
-- **Status:** implemented and verified on `feat/stage2-catalog-ux`; pending merge
+- **Status:** merged in PR #3
 
 ### Stage 3: Source/interface model
 - [x] Add small generic source/interface metadata
@@ -60,7 +60,7 @@ Build a minimal portable YAML-backed registry/catalog in Python with a domain re
 - [x] Add declared interface status/operations
 - [x] Project source/interfaces into search and Prefab details
 - [x] Verify source/interface discovery in Chromium
-- **Status:** implemented and verified on `feat/stage3-source-interface-model`; stacked on PR #3 and pending merge
+- **Status:** promoted to `master` through the integration PRs
 
 ### Stage 4: Workspace shell separation — issue #5
 - [x] Add a separate Next.js workspace shell
@@ -70,24 +70,28 @@ Build a minimal portable YAML-backed registry/catalog in Python with a domain re
 - [x] Add an Apps surface for the existing Prefab host
 - [x] Add explicit Artifacts, Runs, and Review destinations without fake backing models
 - [x] Add web build to CI
-- [ ] Read back CI green for the stacked PR
-- **Status:** implementation in progress on `feat/stage4-workspace-shell`; stacked on PR #4
+- [x] Read back CI green for the stacked PR
+- **Status:** promoted to `master` through PR #7/#8
 
 ### Stage 5: FastMCP Generative UI — issue #9
 - [x] Mount native `GenerativeUI()` provider
 - [x] Verify `generate_prefab_ui` and `search_prefab_components` registration
 - [x] Separate Catalog and Generative UI inside the Apps workspace
 - [x] Add real-browser verification of the Apps switcher
-- [ ] Read back CI green
-- **Status:** implemented on `feat/stage5-generative-ui`; downstream of promotion PR #8
+- [x] Read back CI green
+- **Status:** merged in PR #10
 
 ### Stage 6: Real skill discovery
-- [ ] Discover real SKILL.md directories through FastMCP's skills provider
-- [ ] Preserve stable IDs and source authority
-- [ ] Distinguish declared from runtime-available interfaces
-- **Status:** not started
+- [x] Discover real `SKILL.md` directories through FastMCP `SkillsDirectoryProvider`
+- [x] Expose main files, manifests, and supporting-file templates as MCP resources
+- [x] Preserve stable `skill.<directory-name>` IDs
+- [x] Overlay matching catalog skills without losing capabilities/relationships
+- [x] Distinguish declared from runtime-available interfaces
+- [x] Project discovered skills through tools/resources, `/api/catalog`, Prefab, and workspace shell
+- [x] Verify real skill resources over FastMCP HTTP
+- **Status:** implemented on `feat/stage5-real-skill-discovery`; PR #11
 
-Later stages after skill discovery (MCP federation, files/docs discovery, controlled CRUD, live adapters, JEv/scale features) remain tracked in issue #1 and are intentionally not started.
+Next is MCP federation. Files/docs discovery, controlled CRUD, live adapters, and JEv/scale features remain tracked in issue #1 and are intentionally not started.
 
 ## Decisions Made
 | # | Decision | Rationale |
@@ -104,3 +108,8 @@ Later stages after skill discovery (MCP federation, files/docs discovery, contro
 |---|---|---|---|
 | 1 | 1 | Initial tests expected 15 records and a single search result, but the requested seed set contains 16 records and both agents run on the Mac Mini. | Corrected test expectations; implementation behavior was correct. |
 | 2 | 1 | Prefab rejected tab state names containing hyphens because state keys must be identifier-safe. | Switched catalog state keys to underscore-safe identifiers and added UI construction coverage. |
+
+Additional decisions:
+- Runtime skill identity is `skill.<directory-name>`.
+- A skill's `mcp-resource` interface becomes `available` only after provider discovery.
+- Real skill discovery is read-only; it does not install/edit/delete/sync skills.
