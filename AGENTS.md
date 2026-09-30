@@ -12,7 +12,8 @@ This repository is a minimal local registry/catalog built with Python, FastMCP, 
 - Seed records are examples and are marked with `metadata.seed: true` and `metadata.example: true`.
 - Current seed count is 16 records across 8 kinds.
 - The Python distribution packages `app` only; registry YAML is intentionally external operational data.
-- The catalog UI has real kind/status filters, full-object search indexing, resolved host names, and expandable outgoing/incoming relationships.
+- The catalog UI has real kind/status filters, full-object search indexing, resolved host names, source metadata, declared interfaces, and expandable outgoing/incoming relationships.
+- Every current seed record declares its YAML catalog source as authoritative today; interface entries use `status: declared` unless a later live-adapter stage verifies availability.
 - CI includes a real Chromium smoke check against the rendered FastMCP Prefab app.
 
 ## Architecture invariant
@@ -30,7 +31,7 @@ Do not move YAML loading into FastMCP handlers, do not make Prefab the data stor
 | Path | Responsibility |
 |---|---|
 | `registry/<kind>/*.yaml` | Development/default durable records grouped by kind |
-| `app/models.py` | Generic Pydantic schema and validation report models |
+| `app/models.py` | Generic Pydantic schema, source/interface semantics, and validation report models |
 | `app/registry.py` | Root resolution, load, list, get, search, filter, outgoing/incoming relationships, validation |
 | `app/server.py` | FastMCP server, tools, resources, `catalog()` |
 | `app/ui.py` | Prefab catalog composition |
@@ -80,7 +81,15 @@ env PATH="$PWD/.venv/bin:$PATH" .venv/bin/fastmcp dev inspector app/server.py
 
 ## Adding records
 
-Use a globally unique ID and relationship target IDs. New kinds need only a new directory and YAML records; no Python dispatch is required. Run tests and registry validation after changes.
+Use a globally unique ID and relationship target IDs. New kinds need only a new directory and YAML records; no Python dispatch is required.
+
+When adding `source` or `interfaces`:
+- do not mark an interface `available` unless runtime connectivity has actually been verified
+- use `authority: catalog` while the YAML record is authoritative
+- use `external` only when an external source is the real authority
+- keep writeback `controlled` or `none` until a mutation path is explicitly implemented
+
+Run tests and registry validation after changes.
 
 ## Before claiming completion
 
