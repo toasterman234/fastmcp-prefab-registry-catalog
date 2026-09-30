@@ -73,7 +73,15 @@ Build a minimal portable YAML-backed registry/catalog in Python with a domain re
 - [ ] Read back CI green for the stacked PR
 - **Status:** implementation in progress on `feat/stage4-workspace-shell`; stacked on PR #4
 
-### Stage 5: Real skill discovery
+### Stage 5: FastMCP Generative UI — issue #9
+- [x] Mount native `GenerativeUI()` provider
+- [x] Verify `generate_prefab_ui` and `search_prefab_components` registration
+- [x] Separate Catalog and Generative UI inside the Apps workspace
+- [x] Add real-browser verification of the Apps switcher
+- [ ] Read back CI green
+- **Status:** implemented on `feat/stage5-generative-ui`; downstream of promotion PR #8
+
+### Stage 6: Real skill discovery
 - [ ] Discover real SKILL.md directories through FastMCP's skills provider
 - [ ] Preserve stable IDs and source authority
 - [ ] Distinguish declared from runtime-available interfaces

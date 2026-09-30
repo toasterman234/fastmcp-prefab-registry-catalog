@@ -49,3 +49,12 @@ Environment variables:
 - `NEXT_PUBLIC_MCP_APPS_URL` defaults to `http://127.0.0.1:9090/launch?tool=catalog`
 
 The iframe path is a transitional development host. A production MCP Apps host is intentionally not claimed or implemented in this stage.
+
+
+## App surfaces
+
+The Apps section has two explicit modes:
+- **Catalog app** — deterministic Prefab UI returned by `catalog()`
+- **Generative UI** — FastMCP's native `GenerativeUI` provider, launched through `generate_prefab_ui`
+
+The development iframe still uses `fastmcp dev apps`. This remains a development bridge, not a production MCP Apps host.
