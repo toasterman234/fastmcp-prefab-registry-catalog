@@ -249,14 +249,14 @@ def build_catalog_app(
         filtered = [obj for obj in objects if obj.kind.casefold() == kind.casefold()]
         kind_tabs.append(
             Tab(
-                f"{kind.title()}s ({len(filtered)})",
+                f"{_kind_plural(kind)} ({len(filtered)})",
                 value=kind.casefold(),
                 children=[
                     _status_tabs(
                         filtered,
                         objects_by_id,
                         incoming,
-                        f"catalog-status-{kind.casefold()}",
+                        _state_key(kind),
                     )
                 ],
             )
@@ -282,7 +282,7 @@ def build_catalog_app(
                 css_class="text-sm text-muted-foreground",
             )
             Tabs(
-                name="catalog-kind",
+                name="catalog_kind",
                 value="all",
                 variant="line",
                 children=kind_tabs,
