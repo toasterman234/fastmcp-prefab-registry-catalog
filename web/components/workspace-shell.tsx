@@ -18,6 +18,7 @@ function Catalog({ snapshot }: { snapshot: RegistrySnapshot }) {
   const [kind, setKind] = useState("all");
   const [selected, setSelected] = useState<RegistryObject | null>(null);
   const skillDiscovery = snapshot.discovery?.skills;
+  const mcpFederation = snapshot.discovery?.mcp_federation;
 
   const kinds = useMemo(
     () => [...new Set(snapshot.objects.map((item) => item.kind))].sort(),
@@ -37,6 +38,15 @@ function Catalog({ snapshot }: { snapshot: RegistrySnapshot }) {
         ...(item.capabilities ?? []),
         item.source?.type ?? "",
         item.source?.authority ?? "",
+        ...(item.interfaces ?? []).flatMap((entry) => [
+          entry.type ?? "",
+          entry.uri ?? "",
+          entry.adapter ?? "",
+          entry.namespace ?? "",
+          entry.status ?? "",
+          ...(entry.operations ?? []),
+        ]),
+        JSON.stringify(item.metadata ?? {}),
       ]
         .join(" ")
         .toLowerCase();
@@ -53,6 +63,7 @@ function Catalog({ snapshot }: { snapshot: RegistrySnapshot }) {
             <p>
               {snapshot.objects.length} objects · {snapshot.status_summary}
               {skillDiscovery?.enabled ? ` · skills: ${skillDiscovery.discovered_count ?? 0} discovered` : ""}
+              {mcpFederation?.enabled ? ` · MCP: ${mcpFederation.available_count ?? 0}/${mcpFederation.configured_count ?? 0} available` : ""}
             </p>
           </div>
           <span className={snapshot.connected === false ? "status warning" : "status ok"}>

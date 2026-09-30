@@ -66,6 +66,8 @@ def _interface_label(interface: InterfaceSpec) -> str:
     parts = [interface.type]
     if interface.adapter:
         parts.append(interface.adapter)
+    if interface.namespace:
+        parts.append(f"namespace={interface.namespace}")
     parts.append(interface.status)
     return " · ".join(parts)
 
@@ -112,6 +114,7 @@ def _search_blob(
                 interface.type,
                 interface.uri or "",
                 interface.adapter or "",
+                interface.namespace or "",
                 interface.status,
                 *interface.operations,
             ]
@@ -202,7 +205,7 @@ def _detail_view(
             Separator(),
             Text("Source", css_class="font-medium"),
             *[Text(line) for line in source_lines],
-            Text("Declared interfaces", css_class="font-medium pt-1"),
+            Text("Interfaces", css_class="font-medium pt-1"),
             *[Text(line) for line in interface_lines],
             Separator(),
             Text("Outgoing relationships", css_class="font-medium"),

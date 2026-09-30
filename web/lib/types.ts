@@ -16,6 +16,7 @@ export type RegistryObject = {
     type?: string;
     uri?: string | null;
     adapter?: string | null;
+    namespace?: string | null;
     status?: string;
     operations?: string[];
   }>;
@@ -38,6 +39,16 @@ export type RegistrySnapshot = {
       discovered_ids?: string[];
       refresh?: string | null;
       protocol_surface?: string | null;
+    };
+    mcp_federation?: {
+      enabled?: boolean;
+      provider?: string | null;
+      configured_count?: number;
+      available_count?: number;
+      unavailable_count?: number;
+      cache_ttl_seconds?: number;
+      refreshed_at?: string | null;
+      servers?: Array<Record<string, unknown>>;
     };
   };
 };
